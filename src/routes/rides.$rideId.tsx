@@ -26,9 +26,8 @@ function RideDetail() {
   const { rideId } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const [seats, setSeats] = useState(1);
-  const [busy, setBusy] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const { data: ride, isLoading } = useQuery({
     queryKey: ["ride", rideId],
