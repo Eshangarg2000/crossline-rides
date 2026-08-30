@@ -70,7 +70,7 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
         ? {
             full_name: p.full_name || "Driver",
             rating: Number(p.rating),
-            trips_count: p.trips_count,
+            trips_count: p.trips_count ?? 0,
             city: p.city,
           }
         : null,
