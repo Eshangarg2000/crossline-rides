@@ -4,7 +4,12 @@ import { useState } from "react";
 import { RideRow } from "@/components/RideRow";
 import { CORRIDORS, searchRides } from "@/lib/rides";
 
-type Search = { from?: string; to?: string; date?: string; seats?: number };
+type Search = {
+  from?: string | undefined;
+  to?: string | undefined;
+  date?: string | undefined;
+  seats?: number | undefined;
+};
 
 export const Route = createFileRoute("/rides")({
   validateSearch: (search: Record<string, unknown>): Search => ({
