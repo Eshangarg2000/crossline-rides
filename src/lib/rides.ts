@@ -1,0 +1,115 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export type Ride = {
+  id: string;
+  driver_id: string;
+  origin: string;
+  destination: string;
+  stops: string[];
+  depart_at: string;
+  arrive_at: string | null;
+  seats_total: number;
+  seats_available: number;
+  price_per_seat: number;
+  car: string | null;
+  notes: string | null;
+  status: string;
+};
+
+export type RideWithDriver = Ride & {
+  driver: { full_name: string; rating: number; trips_count: number; city: string | null } | null;
+};
+
+export const CORRIDORS = [
+  { from: "Toronto, ON", to: "Ottawa, ON" },
+  { from: "Vancouver, BC", to: "Whistler, BC" },
+  { from: "Toronto, ON", to: "Kingston, ON" },
+  { from: "Mississauga, ON", to: "Hamilton, ON" },
+];
+
+export function money(amount: number) {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+  }).format(amount);
+}
+
+export function timeOf(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" });
+}
+
+export function dayOf(iso: string) {
+  return new Date(iso).toLocaleDateString("en-CA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0]![0]! + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
+  if (rides.length === 0) return [];
+  const ids = [...new Set(rides.map((r) => r.driver_id))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, rating, trips_count, city")
+    .in("id", ids);
+
+  const map = new Map((profiles ?? []).map((p) => [p.id, p]));
+  return rides.map((r) => {
+    const p = map.get(r.driver_id);
+    return {
+      ...r,
+      driver: p
+        ? {
+            full_name: p.full_name || "Driver",
+            rating: Number(p.rating),
+            trips_count: p.trips_count,
+            city: p.city,
+          }
+        : null,
+    };
+  });
+}
+
+export async function searchRides(params: {
+  from?: string | undefined;
+  to?: string | undefined;
+  date?: string | undefined;
+  seats?: number | undefined;
+}) {
+  let query = supabase
+    .from("rides")
+    .select("*")
+    .eq("status", "published")
+    .gte("depart_at", new Date().toISOString())
+    .order("depart_at", { ascending: true })
+    .limit(50);
+
+  if (params.from) query = query.ilike("origin", `%${params.from}%`);
+  if (params.to) query = query.ilike("destination", `%${params.to}%`);
+  if (params.seats) query = query.gte("seats_available", params.seats);
+  if (params.date) {
+    const start = new Date(`${params.date}T00:00:00`);
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    query = query.gte("depart_at", start.toISOString()).lt("depart_at", end.toISOString());
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return attachDrivers((data ?? []) as unknown as Ride[]);
+}
+
+export async function getRide(id: string): Promise<RideWithDriver | null> {
+  const { data, error } = await supabase.from("rides").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const [ride] = await attachDrivers([data as unknown as Ride]);
+  return ride ?? null;
+}

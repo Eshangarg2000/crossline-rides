@@ -10,33 +10,90 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as MyTripsRouteImport } from './routes/my-trips'
+import { Route as PostRideRouteImport } from './routes/post-ride'
+import { Route as RidesRouteImport } from './routes/rides'
+import { Route as RidesRideIdRouteImport } from './routes/rides.$rideId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyTripsRoute = MyTripsRouteImport.update({
+  id: '/my-trips',
+  path: '/my-trips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostRideRoute = PostRideRouteImport.update({
+  id: '/post-ride',
+  path: '/post-ride',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RidesRoute = RidesRouteImport.update({
+  id: '/rides',
+  path: '/rides',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RidesRideIdRoute = RidesRideIdRouteImport.update({
+  id: '/$rideId',
+  path: '/$rideId',
+  getParentRoute: () => RidesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/my-trips': typeof MyTripsRoute
+  '/post-ride': typeof PostRideRoute
+  '/rides': typeof RidesRouteWithChildren
+  '/rides/$rideId': typeof RidesRideIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/my-trips': typeof MyTripsRoute
+  '/post-ride': typeof PostRideRoute
+  '/rides': typeof RidesRouteWithChildren
+  '/rides/$rideId': typeof RidesRideIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/my-trips': typeof MyTripsRoute
+  '/post-ride': typeof PostRideRoute
+  '/rides': typeof RidesRouteWithChildren
+  '/rides/$rideId': typeof RidesRideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/auth' | '/my-trips' | '/post-ride' | '/rides' | '/rides/$rideId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/auth' | '/my-trips' | '/post-ride' | '/rides' | '/rides/$rideId'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/my-trips'
+    | '/post-ride'
+    | '/rides'
+    | '/rides/$rideId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  MyTripsRoute: typeof MyTripsRoute
+  PostRideRoute: typeof PostRideRoute
+  RidesRoute: typeof RidesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +105,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-trips': {
+      id: '/my-trips'
+      path: '/my-trips'
+      fullPath: '/my-trips'
+      preLoaderRoute: typeof MyTripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post-ride': {
+      id: '/post-ride'
+      path: '/post-ride'
+      fullPath: '/post-ride'
+      preLoaderRoute: typeof PostRideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rides': {
+      id: '/rides'
+      path: '/rides'
+      fullPath: '/rides'
+      preLoaderRoute: typeof RidesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rides/$rideId': {
+      id: '/rides/$rideId'
+      path: '/$rideId'
+      fullPath: '/rides/$rideId'
+      preLoaderRoute: typeof RidesRideIdRouteImport
+      parentRoute: typeof RidesRoute
+    }
   }
 }
 
+interface RidesRouteChildren {
+  RidesRideIdRoute: typeof RidesRideIdRoute
+}
+
+const RidesRouteChildren: RidesRouteChildren = {
+  RidesRideIdRoute: RidesRideIdRoute,
+}
+
+const RidesRouteWithChildren = RidesRoute._addFileChildren(RidesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  MyTripsRoute: MyTripsRoute,
+  PostRideRoute: PostRideRoute,
+  RidesRoute: RidesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
