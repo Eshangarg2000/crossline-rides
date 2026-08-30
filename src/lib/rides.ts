@@ -78,7 +78,12 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
   });
 }
 
-export async function searchRides(params: { from?: string; to?: string; date?: string; seats?: number }) {
+export async function searchRides(params: {
+  from?: string | undefined;
+  to?: string | undefined;
+  date?: string | undefined;
+  seats?: number | undefined;
+}) {
   let query = supabase
     .from("rides")
     .select("*")

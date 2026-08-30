@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as MyTripsRouteImport } from './routes/my-trips'
+import { Route as PostRideRouteImport } from './routes/post-ride'
 import { Route as RidesRouteImport } from './routes/rides'
 import { Route as RidesRideIdRouteImport } from './routes/rides.$rideId'
 
@@ -22,6 +24,16 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyTripsRoute = MyTripsRouteImport.update({
+  id: '/my-trips',
+  path: '/my-trips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostRideRoute = PostRideRouteImport.update({
+  id: '/post-ride',
+  path: '/post-ride',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RidesRoute = RidesRouteImport.update({
@@ -38,12 +50,16 @@ const RidesRideIdRoute = RidesRideIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/my-trips': typeof MyTripsRoute
+  '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
   '/rides/$rideId': typeof RidesRideIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/my-trips': typeof MyTripsRoute
+  '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
   '/rides/$rideId': typeof RidesRideIdRoute
 }
@@ -51,20 +67,32 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/my-trips': typeof MyTripsRoute
+  '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
   '/rides/$rideId': typeof RidesRideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/rides' | '/rides/$rideId'
+  fullPaths:
+    '/' | '/auth' | '/my-trips' | '/post-ride' | '/rides' | '/rides/$rideId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/rides' | '/rides/$rideId'
-  id: '__root__' | '/' | '/auth' | '/rides' | '/rides/$rideId'
+  to: '/' | '/auth' | '/my-trips' | '/post-ride' | '/rides' | '/rides/$rideId'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/my-trips'
+    | '/post-ride'
+    | '/rides'
+    | '/rides/$rideId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  MyTripsRoute: typeof MyTripsRoute
+  PostRideRoute: typeof PostRideRoute
   RidesRoute: typeof RidesRouteWithChildren
 }
 
@@ -82,6 +110,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-trips': {
+      id: '/my-trips'
+      path: '/my-trips'
+      fullPath: '/my-trips'
+      preLoaderRoute: typeof MyTripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post-ride': {
+      id: '/post-ride'
+      path: '/post-ride'
+      fullPath: '/post-ride'
+      preLoaderRoute: typeof PostRideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rides': {
@@ -114,6 +156,8 @@ const RidesRouteWithChildren = RidesRoute._addFileChildren(RidesRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  MyTripsRoute: MyTripsRoute,
+  PostRideRoute: PostRideRoute,
   RidesRoute: RidesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
