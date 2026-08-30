@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { dayOf, getRide, money, timeOf } from "@/lib/rides";
+import { quoteBooking } from "@/lib/fees";
+import { RideCheckout } from "@/components/RideCheckout";
 import highway from "@/assets/highway-merge.jpg";
 
 export const Route = createFileRoute("/rides/$rideId")({
@@ -26,9 +26,8 @@ function RideDetail() {
   const { rideId } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const [seats, setSeats] = useState(1);
-  const [busy, setBusy] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const { data: ride, isLoading } = useQuery({
     queryKey: ["ride", rideId],
@@ -51,37 +50,15 @@ function RideDetail() {
   }
 
   const price = Number(ride.price_per_seat);
-  const total = price * seats;
+  const quote = quoteBooking(price, seats);
+  const isOwnRide = user?.id === ride.driver_id;
 
-  async function book() {
-    if (!ride) return;
+  function startCheckout() {
     if (!user) {
       navigate({ to: "/auth" });
       return;
     }
-    if (user.id === ride.driver_id) {
-      toast.error("This is your own ride.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const { error } = await supabase.from("bookings").insert({
-        ride_id: ride.id,
-        rider_id: user.id,
-        seats,
-        total_amount: total,
-        payment_status: "paid",
-        status: "confirmed",
-      });
-      if (error) throw error;
-      toast.success(`Seat reserved · ${money(total)} paid in app`);
-      qc.invalidateQueries({ queryKey: ["ride", rideId] });
-      navigate({ to: "/my-trips" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not complete booking");
-    } finally {
-      setBusy(false);
-    }
+    setCheckingOut(true);
   }
 
   const stops = [
@@ -169,8 +146,9 @@ function RideDetail() {
             min={1}
             max={Math.max(1, ride.seats_available)}
             value={seats}
+            disabled={checkingOut}
             onChange={(e) => setSeats(Math.max(1, Number(e.target.value) || 1))}
-            className="w-full rounded-[12px] bg-background ring-1 ring-black/5 px-3.5 py-2.5 text-sm outline-none focus:ring-primary"
+            className="w-full rounded-[12px] bg-background ring-1 ring-black/5 px-3.5 py-2.5 text-sm outline-none focus:ring-primary disabled:opacity-60"
           />
 
           <div className="mt-5 space-y-2 text-sm">
@@ -178,27 +156,41 @@ function RideDetail() {
               <span className="text-muted-foreground">
                 {seats} × {money(price)}
               </span>
-              <span className="text-foreground">{money(total)}</span>
+              <span className="text-foreground">{money(quote.subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Service fee</span>
+              <span className="text-foreground">{money(quote.serviceFee)}</span>
             </div>
             <div className="flex justify-between border-t border-line pt-2">
               <span className="font-medium text-foreground">Total</span>
-              <span className="font-display font-semibold text-foreground">{money(total)}</span>
+              <span className="font-display font-semibold text-foreground">{money(quote.total)}</span>
             </div>
           </div>
 
-          <button
-            onClick={book}
-            disabled={busy || ride.seats_available < 1}
-            className="mt-5 w-full rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold py-3 disabled:opacity-60"
-          >
-            {ride.seats_available < 1
-              ? "Fully booked"
-              : busy
-                ? "Reserving…"
-                : `Book ${seats} seat${seats === 1 ? "" : "s"} · pay in app`}
-          </button>
+          {checkingOut ? (
+            <RideCheckout
+              rideId={ride.id}
+              seats={seats}
+              returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+            />
+          ) : (
+            <button
+              onClick={startCheckout}
+              disabled={ride.seats_available < 1 || isOwnRide}
+              className="mt-5 w-full rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold py-3 disabled:opacity-60"
+            >
+              {isOwnRide
+                ? "This is your ride"
+                : ride.seats_available < 1
+                  ? "Fully booked"
+                  : `Book ${seats} seat${seats === 1 ? "" : "s"} · ${money(quote.total)}`}
+            </button>
+          )}
           <p className="mt-3 text-xs text-muted-foreground">
-            Free cancellation up to 24h before departure · fares in CAD.
+            Free cancellation up to 24h before departure · fares in CAD. Your card is charged
+            securely at checkout; the driver is paid out the fare and Crossline keeps the service
+            fee.
           </p>
         </div>
       </div>
