@@ -98,49 +98,49 @@ function PostRide() {
 
       <form onSubmit={submit} className="mt-7 rounded-[22px] ring-1 ring-black/5 bg-card p-5 sm:p-7 space-y-4">
         <div>
-          <label className={label}>Pick up</label>
-          <input className={field} value={origin} onChange={(e) => setOrigin(e.target.value)} required placeholder="Mississauga, ON" />
+          <label className={label} htmlFor="pr-origin">Pick up</label>
+          <input id="pr-origin" className={field} value={origin} onChange={(e) => setOrigin(e.target.value)} required placeholder="Mississauga, ON" />
         </div>
         <div>
-          <label className={label}>Stops along the way (comma separated)</label>
-          <input className={field} value={stops} onChange={(e) => setStops(e.target.value)} placeholder="Oakville, Burlington" />
+          <label className={label} htmlFor="pr-stops">Stops along the way (comma separated)</label>
+          <input id="pr-stops" className={field} value={stops} onChange={(e) => setStops(e.target.value)} placeholder="Oakville, Burlington" />
         </div>
         <div>
-          <label className={label}>Drop off</label>
-          <input className={field} value={destination} onChange={(e) => setDestination(e.target.value)} required placeholder="Ottawa, ON" />
+          <label className={label} htmlFor="pr-destination">Drop off</label>
+          <input id="pr-destination" className={field} value={destination} onChange={(e) => setDestination(e.target.value)} required placeholder="Ottawa, ON" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={label}>Date</label>
-            <input type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} required />
+            <label className={label} htmlFor="pr-date">Date</label>
+            <input id="pr-date" type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
           <div>
-            <label className={label}>Departure time</label>
-            <input type="time" className={field} value={time} onChange={(e) => setTime(e.target.value)} required />
+            <label className={label} htmlFor="pr-depart">Departure time</label>
+            <input id="pr-depart" type="time" className={field} value={time} onChange={(e) => setTime(e.target.value)} required />
           </div>
           <div>
-            <label className={label}>Arrival time (optional)</label>
-            <input type="time" className={field} value={arriveTime} onChange={(e) => setArriveTime(e.target.value)} />
+            <label className={label} htmlFor="pr-arrive">Arrival time (optional)</label>
+            <input id="pr-arrive" type="time" className={field} value={arriveTime} onChange={(e) => setArriveTime(e.target.value)} />
           </div>
           <div>
-            <label className={label}>Seats offered</label>
-            <input type="number" min={1} max={8} className={field} value={seatsTotal} onChange={(e) => setSeatsTotal(e.target.value)} required />
+            <label className={label} htmlFor="pr-seats">Seats offered</label>
+            <input id="pr-seats" type="number" min={1} max={8} className={field} value={seatsTotal} onChange={(e) => setSeatsTotal(e.target.value)} required />
           </div>
           <div>
-            <label className={label}>Price per seat (CAD)</label>
-            <input type="number" min={0} step="0.5" className={field} value={price} onChange={(e) => setPrice(e.target.value)} required />
+            <label className={label} htmlFor="pr-price">Price per seat (CAD)</label>
+            <input id="pr-price" type="number" min={0} step="0.5" className={field} value={price} onChange={(e) => setPrice(e.target.value)} required />
           </div>
           <div>
-            <label className={label}>Car</label>
-            <input className={field} value={car} onChange={(e) => setCar(e.target.value)} placeholder="Toyota RAV4" />
+            <label className={label} htmlFor="pr-car">Car</label>
+            <input id="pr-car" className={field} value={car} onChange={(e) => setCar(e.target.value)} placeholder="Toyota RAV4" />
           </div>
         </div>
 
         <div>
-          <label className={label}>Notes for riders</label>
+          <label className={label} htmlFor="pr-notes">Notes for riders</label>
           <textarea
-            className={`${field} min-h-24`}
+ id="pr-notes"            className={`${field} min-h-24`}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="One bag each, no smoking, leaving from the GO lot."

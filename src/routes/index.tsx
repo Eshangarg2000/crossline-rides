@@ -74,8 +74,9 @@ function Home() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-2 items-end">
             <div className="sm:col-span-4">
-              <label className={label}>From</label>
+              <label className={label} htmlFor="home-from">From</label>
               <input
+                id="home-from"
                 className={field}
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
@@ -83,8 +84,9 @@ function Home() {
               />
             </div>
             <div className="sm:col-span-4">
-              <label className={label}>To</label>
+              <label className={label} htmlFor="home-to">To</label>
               <input
+                id="home-to"
                 className={field}
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
@@ -92,12 +94,13 @@ function Home() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className={label}>Date</label>
-              <input type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} />
+              <label className={label} htmlFor="home-date">Date</label>
+              <input id="home-date" type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="sm:col-span-2">
-              <label className={label}>Seats</label>
+              <label className={label} htmlFor="home-seats">Seats</label>
               <input
+                id="home-seats"
                 type="number"
                 min={1}
                 max={8}
