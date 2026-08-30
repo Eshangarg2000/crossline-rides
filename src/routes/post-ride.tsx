@@ -140,7 +140,8 @@ function PostRide() {
         <div>
           <label className={label} htmlFor="pr-notes">Notes for riders</label>
           <textarea
- id="pr-notes"            className={`${field} min-h-24`}
+            id="pr-notes"
+            className={`${field} min-h-24`}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="One bag each, no smoking, leaving from the GO lot."
