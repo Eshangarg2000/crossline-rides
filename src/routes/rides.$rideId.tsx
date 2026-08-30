@@ -50,37 +50,15 @@ function RideDetail() {
   }
 
   const price = Number(ride.price_per_seat);
-  const total = price * seats;
+  const quote = quoteBooking(price, seats);
+  const isOwnRide = user?.id === ride.driver_id;
 
-  async function book() {
-    if (!ride) return;
+  function startCheckout() {
     if (!user) {
       navigate({ to: "/auth" });
       return;
     }
-    if (user.id === ride.driver_id) {
-      toast.error("This is your own ride.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const { error } = await supabase.from("bookings").insert({
-        ride_id: ride.id,
-        rider_id: user.id,
-        seats,
-        total_amount: total,
-        payment_status: "paid",
-        status: "confirmed",
-      });
-      if (error) throw error;
-      toast.success(`Seat reserved · ${money(total)} paid in app`);
-      qc.invalidateQueries({ queryKey: ["ride", rideId] });
-      navigate({ to: "/my-trips" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not complete booking");
-    } finally {
-      setBusy(false);
-    }
+    setCheckingOut(true);
   }
 
   const stops = [
