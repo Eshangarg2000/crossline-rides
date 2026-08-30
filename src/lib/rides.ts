@@ -56,12 +56,16 @@ export function initials(name: string) {
 async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
   if (rides.length === 0) return [];
   const ids = [...new Set(rides.map((r) => r.driver_id))];
-  const { data: profiles } = await supabase
-    .from("public_driver_profiles")
-    .select("id, full_name, rating, trips_count, city")
-    .in("id", ids);
+  const { data } = await supabase.rpc("get_public_driver_profiles", { ids });
+  const profiles = (data ?? []) as Array<{
+    id: string;
+    full_name: string | null;
+    rating: number | string | null;
+    trips_count: number | null;
+    city: string | null;
+  }>;
 
-  const map = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const map = new Map(profiles.map((p) => [p.id, p]));
   return rides.map((r) => {
     const p = map.get(r.driver_id);
     return {
