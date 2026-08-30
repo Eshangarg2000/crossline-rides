@@ -146,8 +146,9 @@ function RideDetail() {
             min={1}
             max={Math.max(1, ride.seats_available)}
             value={seats}
+            disabled={checkingOut}
             onChange={(e) => setSeats(Math.max(1, Number(e.target.value) || 1))}
-            className="w-full rounded-[12px] bg-background ring-1 ring-black/5 px-3.5 py-2.5 text-sm outline-none focus:ring-primary"
+            className="w-full rounded-[12px] bg-background ring-1 ring-black/5 px-3.5 py-2.5 text-sm outline-none focus:ring-primary disabled:opacity-60"
           />
 
           <div className="mt-5 space-y-2 text-sm">
@@ -155,27 +156,41 @@ function RideDetail() {
               <span className="text-muted-foreground">
                 {seats} × {money(price)}
               </span>
-              <span className="text-foreground">{money(total)}</span>
+              <span className="text-foreground">{money(quote.subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Service fee</span>
+              <span className="text-foreground">{money(quote.serviceFee)}</span>
             </div>
             <div className="flex justify-between border-t border-line pt-2">
               <span className="font-medium text-foreground">Total</span>
-              <span className="font-display font-semibold text-foreground">{money(total)}</span>
+              <span className="font-display font-semibold text-foreground">{money(quote.total)}</span>
             </div>
           </div>
 
-          <button
-            onClick={book}
-            disabled={busy || ride.seats_available < 1}
-            className="mt-5 w-full rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold py-3 disabled:opacity-60"
-          >
-            {ride.seats_available < 1
-              ? "Fully booked"
-              : busy
-                ? "Reserving…"
-                : `Book ${seats} seat${seats === 1 ? "" : "s"} · pay in app`}
-          </button>
+          {checkingOut ? (
+            <RideCheckout
+              rideId={ride.id}
+              seats={seats}
+              returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+            />
+          ) : (
+            <button
+              onClick={startCheckout}
+              disabled={ride.seats_available < 1 || isOwnRide}
+              className="mt-5 w-full rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold py-3 disabled:opacity-60"
+            >
+              {isOwnRide
+                ? "This is your ride"
+                : ride.seats_available < 1
+                  ? "Fully booked"
+                  : `Book ${seats} seat${seats === 1 ? "" : "s"} · ${money(quote.total)}`}
+            </button>
+          )}
           <p className="mt-3 text-xs text-muted-foreground">
-            Free cancellation up to 24h before departure · fares in CAD.
+            Free cancellation up to 24h before departure · fares in CAD. Your card is charged
+            securely at checkout; the driver is paid out the fare and Crossline keeps the service
+            fee.
           </p>
         </div>
       </div>
