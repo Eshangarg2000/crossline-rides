@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { dayOf, getRide, money, timeOf } from "@/lib/rides";
+import { quoteBooking } from "@/lib/fees";
+import { RideCheckout } from "@/components/RideCheckout";
 import highway from "@/assets/highway-merge.jpg";
 
 export const Route = createFileRoute("/rides/$rideId")({
