@@ -17,34 +17,46 @@ export type Database = {
       bookings: {
         Row: {
           created_at: string
+          driver_payout: number
           id: string
+          payment_environment: string
           payment_status: string
           ride_id: string
           rider_id: string
           seats: number
+          service_fee: number
           status: string
+          stripe_session_id: string | null
           total_amount: number
           updated_at: string
         }
         Insert: {
           created_at?: string
+          driver_payout?: number
           id?: string
+          payment_environment?: string
           payment_status?: string
           ride_id: string
           rider_id: string
           seats?: number
+          service_fee?: number
           status?: string
+          stripe_session_id?: string | null
           total_amount: number
           updated_at?: string
         }
         Update: {
           created_at?: string
+          driver_payout?: number
           id?: string
+          payment_environment?: string
           payment_status?: string
           ride_id?: string
           rider_id?: string
           seats?: number
+          service_fee?: number
           status?: string
+          stripe_session_id?: string | null
           total_amount?: number
           updated_at?: string
         }
