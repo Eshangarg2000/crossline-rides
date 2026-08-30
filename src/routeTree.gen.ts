@@ -15,6 +15,7 @@ import { Route as MyTripsRouteImport } from './routes/my-trips'
 import { Route as PostRideRouteImport } from './routes/post-ride'
 import { Route as RidesRouteImport } from './routes/rides'
 import { Route as RidesRideIdRouteImport } from './routes/rides.$rideId'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,12 @@ const RidesRideIdRoute = RidesRideIdRouteImport.update({
   path: '/$rideId',
   getParentRoute: () => RidesRoute,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByFullPath {
   '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
   '/rides/$rideId': typeof RidesRideIdRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +70,7 @@ export interface FileRoutesByTo {
   '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
   '/rides/$rideId': typeof RidesRideIdRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +80,27 @@ export interface FileRoutesById {
   '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
   '/rides/$rideId': typeof RidesRideIdRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/my-trips' | '/post-ride' | '/rides' | '/rides/$rideId'
+    | '/'
+    | '/auth'
+    | '/my-trips'
+    | '/post-ride'
+    | '/rides'
+    | '/rides/$rideId'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/my-trips' | '/post-ride' | '/rides' | '/rides/$rideId'
+  to:
+    | '/'
+    | '/auth'
+    | '/my-trips'
+    | '/post-ride'
+    | '/rides'
+    | '/rides/$rideId'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -86,6 +109,7 @@ export interface FileRouteTypes {
     | '/post-ride'
     | '/rides'
     | '/rides/$rideId'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +118,7 @@ export interface RootRouteChildren {
   MyTripsRoute: typeof MyTripsRoute
   PostRideRoute: typeof PostRideRoute
   RidesRoute: typeof RidesRouteWithChildren
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RidesRideIdRouteImport
       parentRoute: typeof RidesRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -159,6 +191,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyTripsRoute: MyTripsRoute,
   PostRideRoute: PostRideRoute,
   RidesRoute: RidesRouteWithChildren,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
