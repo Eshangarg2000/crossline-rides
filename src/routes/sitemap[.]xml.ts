@@ -38,12 +38,11 @@ export const Route = createFileRoute("/sitemap.xml")({
         });
 
         const pageSize = 1000;
-        const today = new Date().toISOString().slice(0, 10);
         for (let offset = 0; ; offset += pageSize) {
           const { data, error } = await supabase
             .from("rides")
             .select("id")
-            .gte("depart_date", today)
+            .gte("depart_at", new Date().toISOString())
             .order("id")
             .range(offset, offset + pageSize - 1);
           if (error) break;
