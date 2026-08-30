@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as MyTripsRouteImport } from './routes/my-trips'
 import { Route as PostRideRouteImport } from './routes/post-ride'
 import { Route as RidesRouteImport } from './routes/rides'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as RidesRideIdRouteImport } from './routes/rides.$rideId'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -43,6 +44,11 @@ const RidesRoute = RidesRouteImport.update({
   path: '/rides',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/rides/$rideId': typeof RidesRideIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/rides/$rideId': typeof RidesRideIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/rides': typeof RidesRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/rides/$rideId': typeof RidesRideIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/my-trips'
     | '/post-ride'
     | '/rides'
+    | '/sitemap.xml'
     | '/checkout/return'
     | '/rides/$rideId'
     | '/api/public/payments/webhook'
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/my-trips'
     | '/post-ride'
     | '/rides'
+    | '/sitemap.xml'
     | '/checkout/return'
     | '/rides/$rideId'
     | '/api/public/payments/webhook'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/my-trips'
     | '/post-ride'
     | '/rides'
+    | '/sitemap.xml'
     | '/checkout/return'
     | '/rides/$rideId'
     | '/api/public/payments/webhook'
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   MyTripsRoute: typeof MyTripsRoute
   PostRideRoute: typeof PostRideRoute
   RidesRoute: typeof RidesRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/rides'
       fullPath: '/rides'
       preLoaderRoute: typeof RidesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -211,6 +231,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyTripsRoute: MyTripsRoute,
   PostRideRoute: PostRideRoute,
   RidesRoute: RidesRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

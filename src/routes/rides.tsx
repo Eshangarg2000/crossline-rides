@@ -80,20 +80,20 @@ function RidesPage() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-2 items-end">
           <div className="sm:col-span-4">
-            <label className={label}>From</label>
-            <input className={field} value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Toronto, ON" />
+            <label className={label} htmlFor="search-from">From</label>
+            <input id="search-from" className={field} value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Toronto, ON" />
           </div>
           <div className="sm:col-span-4">
-            <label className={label}>To</label>
-            <input className={field} value={to} onChange={(e) => setTo(e.target.value)} placeholder="Ottawa, ON" />
+            <label className={label} htmlFor="search-to">To</label>
+            <input id="search-to" className={field} value={to} onChange={(e) => setTo(e.target.value)} placeholder="Ottawa, ON" />
           </div>
           <div className="sm:col-span-2">
-            <label className={label}>Date</label>
-            <input type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} />
+            <label className={label} htmlFor="search-date">Date</label>
+            <input id="search-date" type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="sm:col-span-2">
-            <label className={label}>Seats</label>
-            <input
+            <label className={label} htmlFor="search-seats">Seats</label>
+            <input id="search-seats"
               type="number"
               min={1}
               max={8}
