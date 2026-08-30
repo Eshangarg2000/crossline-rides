@@ -162,7 +162,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_driver_profiles: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          full_name: string | null
+          id: string | null
+          rating: number | null
+          trips_count: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string | null
+          rating?: number | null
+          trips_count?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string | null
+          rating?: number | null
+          trips_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

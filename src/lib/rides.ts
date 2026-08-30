@@ -57,7 +57,7 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
   if (rides.length === 0) return [];
   const ids = [...new Set(rides.map((r) => r.driver_id))];
   const { data: profiles } = await supabase
-    .from("profiles")
+    .from("public_driver_profiles")
     .select("id, full_name, rating, trips_count, city")
     .in("id", ids);
 
@@ -70,7 +70,7 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
         ? {
             full_name: p.full_name || "Driver",
             rating: Number(p.rating),
-            trips_count: p.trips_count,
+            trips_count: p.trips_count ?? 0,
             city: p.city,
           }
         : null,
