@@ -89,6 +89,28 @@
 
   body {
     background-color: var(--color-background);
+    background-image: radial-gradient(
+      120% 90% at 85% -10%,
+      oklch(0.925 0.055 82) 0%,
+      oklch(0.933 0.043 85) 22%,
+      oklch(0.965 0.021 88) 55%,
+      oklch(0.965 0.021 88) 100%
+    );
+    background-attachment: fixed;
     color: var(--color-foreground);
+    font-family: var(--font-body-family);
   }
 }
+
+@utility route-line {
+  background-image: linear-gradient(
+    to right,
+    var(--color-primary) 0 6px,
+    transparent 6px 14px
+  );
+  background-size: 14px 2px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-color: transparent;
+}
+
