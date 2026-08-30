@@ -12,7 +12,7 @@ export const Route = createFileRoute("/checkout/return")({
       { property: "og:description", content: "Your carpool seat payment is complete." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { session_id?: string | undefined } => ({
     session_id: typeof search['session_id'] === "string" ? (search['session_id'] as string) : undefined,
   }),
   component: CheckoutReturn,
