@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useServerFn } from "@tanstack/react-start";
+import { submitDriverApplication } from "@/lib/driver.functions";
 import {
   DOCUMENTS,
   PROVINCES,
@@ -66,6 +68,7 @@ const sectionTitle = "font-display font-semibold text-foreground text-xl";
 function BecomeDriver() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const runSubmit = useServerFn(submitDriverApplication);
 
   const [form, setForm] = useState<Form>(EMPTY);
   const [docs, setDocs] = useState<Partial<Record<DocumentKey, string>>>({});
