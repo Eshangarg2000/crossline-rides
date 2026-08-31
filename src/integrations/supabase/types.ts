@@ -58,6 +58,9 @@ export type Database = {
           id: string
           payment_environment: string
           payment_status: string
+          payout_at: string | null
+          payout_reference: string | null
+          payout_status: string
           pickup_point: Json | null
           pickup_request: string | null
           refund_amount: number
@@ -86,6 +89,9 @@ export type Database = {
           id?: string
           payment_environment?: string
           payment_status?: string
+          payout_at?: string | null
+          payout_reference?: string | null
+          payout_status?: string
           pickup_point?: Json | null
           pickup_request?: string | null
           refund_amount?: number
@@ -114,6 +120,9 @@ export type Database = {
           id?: string
           payment_environment?: string
           payment_status?: string
+          payout_at?: string | null
+          payout_reference?: string | null
+          payout_status?: string
           pickup_point?: Json | null
           pickup_request?: string | null
           refund_amount?: number
@@ -507,6 +516,9 @@ export type Database = {
           id: string
           payment_environment: string
           payment_status: string
+          payout_at: string | null
+          payout_reference: string | null
+          payout_status: string
           pickup_point: Json | null
           pickup_request: string | null
           refund_amount: number
@@ -564,6 +576,9 @@ export type Database = {
           id: string
           payment_environment: string
           payment_status: string
+          payout_at: string | null
+          payout_reference: string | null
+          payout_status: string
           pickup_point: Json | null
           pickup_request: string | null
           refund_amount: number
@@ -636,6 +651,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      run_lifecycle_sweep: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "reviewer" | "user"
