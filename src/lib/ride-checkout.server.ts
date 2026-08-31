@@ -1,51 +1,63 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createStripeClient, type StripeEnv } from "@/lib/stripe.server";
-import { quoteBooking } from "@/lib/fees";
+import { createStripeClient, getServerStripeEnv } from "@/lib/stripe.server";
 
 type Ctx = {
   supabase: SupabaseClient<any, any, any>;
   userId: string;
 };
 
+/** How long a seat stays held while the rider completes payment. */
+const HOLD_MINUTES = 30;
+
 export async function startRideCheckout(
   ctx: Ctx,
-  input: { rideId: string; seats: number; returnUrl: string; environment: StripeEnv },
+  input: { rideId: string; seats: number; returnUrl: string },
 ): Promise<{ clientSecret: string }> {
   const { supabase, userId } = ctx;
+  const environment = getServerStripeEnv();
 
   const { data: ride, error: rideError } = await supabase
     .from("rides")
-    .select("id, driver_id, origin, destination, depart_at, price_per_seat, seats_available, status")
+    .select("id, driver_id, origin, destination, depart_at, price_per_seat, status")
     .eq("id", input.rideId)
     .maybeSingle();
 
   if (rideError) throw new Error(rideError.message);
   if (!ride) throw new Error("Ride not found");
-  if (ride.status !== "published") throw new Error("This ride is no longer open for booking");
-  if (ride.driver_id === userId) throw new Error("You cannot book your own ride");
-  if (ride.seats_available < input.seats) throw new Error("Not enough seats left on this ride");
 
-  const quote = quoteBooking(Number(ride.price_per_seat), input.seats);
-
-  const { data: booking, error: bookingError } = await supabase
-    .from("bookings")
-    .insert({
-      ride_id: ride.id,
-      rider_id: userId,
-      seats: input.seats,
-      total_amount: quote.total,
-      service_fee: quote.serviceFee,
-      driver_payout: quote.driverPayout,
-      payment_status: "pending",
-      status: "pending",
-      payment_environment: input.environment,
-    })
-    .select("id")
-    .single();
+  // Seat availability, pricing, ownership and duplicate protection are all
+  // enforced inside the database function — never from values sent by the client.
+  const { data: booking, error: bookingError } = await supabase.rpc("create_booking_hold", {
+    _ride_id: input.rideId,
+    _seats: input.seats,
+    _environment: environment,
+    _hold_minutes: HOLD_MINUTES,
+  });
 
   if (bookingError) throw new Error(bookingError.message);
+  const held = booking as {
+    id: string;
+    seats: number;
+    service_fee: number;
+    driver_payout: number;
+    stripe_session_id: string | null;
+  };
+  if (!held?.id) throw new Error("Could not start this booking");
 
-  const stripe = createStripeClient(input.environment);
+  const stripe = createStripeClient(environment);
+
+  // Idempotency: if this hold already has an open Stripe session, reuse it so a
+  // double click or a refreshed checkout page does not create a second charge.
+  if (held.stripe_session_id) {
+    try {
+      const existing = await stripe.checkout.sessions.retrieve(held.stripe_session_id);
+      if (existing.status === "open" && existing.client_secret) {
+        return { clientSecret: existing.client_secret };
+      }
+    } catch {
+      // Session no longer retrievable — fall through and create a new one.
+    }
+  }
 
   const {
     data: { user },
@@ -69,61 +81,66 @@ export async function startRideCheckout(
 
   const label = `${ride.origin} → ${ride.destination}`;
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    ui_mode: "embedded_page",
-    return_url: input.returnUrl,
-    customer: customerId,
-    // Stripe calculates GST/HST/PST from the rider's billing province.
-    automatic_tax: { enabled: true },
-    billing_address_collection: "required",
-    customer_update: { address: "auto", name: "auto" },
-    line_items: [
-      {
-        price_data: {
-          currency: "cad",
-          // Cost-sharing carpool fare paid to the driver: not a taxable
-          // commercial supply, so it is classified as non-taxable.
-          product_data: {
-            name: `Carpool seat · ${label}`,
-            tax_code: "txcd_00000000",
+  const session = await stripe.checkout.sessions.create(
+    {
+      mode: "payment",
+      ui_mode: "embedded_page",
+      return_url: input.returnUrl,
+      customer: customerId,
+      expires_at: Math.floor(Date.now() / 1000) + HOLD_MINUTES * 60,
+      // Stripe calculates GST/HST/PST from the rider's billing province.
+      automatic_tax: { enabled: true },
+      billing_address_collection: "required",
+      customer_update: { address: "auto", name: "auto" },
+      line_items: [
+        {
+          price_data: {
+            currency: "cad",
+            // Cost-sharing carpool fare paid to the driver: not a taxable
+            // commercial supply, so it is classified as non-taxable.
+            product_data: {
+              name: `Carpool seat · ${label}`,
+              tax_code: "txcd_00000000",
+            },
+            unit_amount: Math.round(Number(ride.price_per_seat) * 100),
+            tax_behavior: "exclusive",
           },
-          unit_amount: Math.round(Number(ride.price_per_seat) * 100),
-          tax_behavior: "exclusive",
+          quantity: held.seats,
         },
-        quantity: input.seats,
-      },
-      {
-        price_data: {
-          currency: "cad",
-          // Crossline's marketplace service: a taxable electronic service.
-          product_data: {
-            name: "Crossline service fee",
-            tax_code: "txcd_10103001",
+        {
+          price_data: {
+            currency: "cad",
+            // Crossline's marketplace service: a taxable electronic service.
+            product_data: {
+              name: "Crossline service fee",
+              tax_code: "txcd_10103001",
+            },
+            unit_amount: Math.round(Number(held.service_fee) * 100),
+            tax_behavior: "exclusive",
           },
-          unit_amount: Math.round(quote.serviceFee * 100),
-          tax_behavior: "exclusive",
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      payment_intent_data: { description: `Crossline carpool · ${label}` },
+      metadata: {
+        userId,
+        bookingId: held.id,
+        rideId: ride.id,
+        seats: String(held.seats),
+        serviceFee: String(held.service_fee),
+        driverPayout: String(held.driver_payout),
+        managed_payments: "false",
       },
-    ],
-    payment_intent_data: { description: `Crossline carpool · ${label}` },
-    metadata: {
-      userId,
-      bookingId: booking.id,
-      rideId: ride.id,
-      seats: String(input.seats),
-      serviceFee: String(quote.serviceFee),
-      driverPayout: String(quote.driverPayout),
-      managed_payments: "false",
     },
-  });
+    // Stripe-level idempotency for retried requests on the same hold.
+    { idempotencyKey: `crossline-booking-${held.id}` },
+  );
 
-
-  await supabase
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin
     .from("bookings")
     .update({ stripe_session_id: session.id })
-    .eq("id", booking.id);
+    .eq("id", held.id);
 
   return { clientSecret: session.client_secret ?? "" };
 }
