@@ -69,6 +69,9 @@ function RideDetail() {
   const price = Number(ride.price_per_seat);
   const quote = quoteBooking(price, seats);
   const isOwnRide = user?.id === ride.driver_id;
+  const isCancelled = ride.status === "cancelled";
+  const hasDeparted = new Date(ride.depart_at).getTime() <= Date.now();
+  const isBookable = ride.status === "published" && !hasDeparted;
 
   function startCheckout() {
     if (!user) {
