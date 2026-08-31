@@ -27,6 +27,9 @@ export function SiteHeader() {
           <Link to="/my-trips" className="hover:text-foreground">
             My trips
           </Link>
+          <Link to="/become-driver" className="hover:text-foreground">
+            Become a driver
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
