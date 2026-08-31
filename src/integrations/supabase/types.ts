@@ -70,6 +70,123 @@ export type Database = {
           },
         ]
       }
+      driver_applications: {
+        Row: {
+          abstract_path: string | null
+          city: string | null
+          consent_accurate: boolean
+          consent_background_check: boolean
+          consent_terms: boolean
+          created_at: string
+          date_of_birth: string | null
+          id: string
+          insurance_company: string | null
+          insurance_expiry: string | null
+          insurance_path: string | null
+          insurance_policy_number: string | null
+          legal_name: string | null
+          licence_back_path: string | null
+          licence_class: string | null
+          licence_expiry: string | null
+          licence_front_path: string | null
+          licence_number: string | null
+          licence_province: string | null
+          phone: string | null
+          plate_number: string | null
+          plate_province: string | null
+          postal_code: string | null
+          province: string | null
+          registration_path: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["driver_app_status"]
+          street_address: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          vehicle_colour: string | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: number | null
+        }
+        Insert: {
+          abstract_path?: string | null
+          city?: string | null
+          consent_accurate?: boolean
+          consent_background_check?: boolean
+          consent_terms?: boolean
+          created_at?: string
+          date_of_birth?: string | null
+          id?: string
+          insurance_company?: string | null
+          insurance_expiry?: string | null
+          insurance_path?: string | null
+          insurance_policy_number?: string | null
+          legal_name?: string | null
+          licence_back_path?: string | null
+          licence_class?: string | null
+          licence_expiry?: string | null
+          licence_front_path?: string | null
+          licence_number?: string | null
+          licence_province?: string | null
+          phone?: string | null
+          plate_number?: string | null
+          plate_province?: string | null
+          postal_code?: string | null
+          province?: string | null
+          registration_path?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["driver_app_status"]
+          street_address?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_colour?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: number | null
+        }
+        Update: {
+          abstract_path?: string | null
+          city?: string | null
+          consent_accurate?: boolean
+          consent_background_check?: boolean
+          consent_terms?: boolean
+          created_at?: string
+          date_of_birth?: string | null
+          id?: string
+          insurance_company?: string | null
+          insurance_expiry?: string | null
+          insurance_path?: string | null
+          insurance_policy_number?: string | null
+          legal_name?: string | null
+          licence_back_path?: string | null
+          licence_class?: string | null
+          licence_expiry?: string | null
+          licence_front_path?: string | null
+          licence_number?: string | null
+          licence_province?: string | null
+          phone?: string | null
+          plate_number?: string | null
+          plate_province?: string | null
+          postal_code?: string | null
+          province?: string | null
+          registration_path?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["driver_app_status"]
+          street_address?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_colour?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -205,7 +322,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      driver_app_status: "draft" | "submitted" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -332,6 +449,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      driver_app_status: ["draft", "submitted", "approved", "rejected"],
+    },
   },
 } as const
