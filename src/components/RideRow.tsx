@@ -1,8 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { dayOf, initials, money, timeOf, type RideWithDriver } from "@/lib/rides";
+import { formatDistance, formatDuration } from "@/lib/maps";
 
 export function RideRow({ ride }: { ride: RideWithDriver }) {
   const name = ride.driver?.full_name || "Driver";
+  const routeLabel = [
+    ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null,
+    ride.duration_min != null ? `${formatDuration(ride.duration_min)} drive` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="rounded-[18px] ring-1 ring-black/5 bg-card overflow-hidden">
@@ -38,10 +45,12 @@ export function RideRow({ ride }: { ride: RideWithDriver }) {
             </div>
             <p className="text-xs text-muted-foreground">
               {dayOf(ride.depart_at)}
+              {routeLabel ? ` · ${routeLabel}` : ""}
               {ride.stops.length > 0
                 ? ` · stops: ${ride.stops.join(" → ")}`
                 : " · direct, no stops"}
             </p>
+
           </div>
 
           <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">

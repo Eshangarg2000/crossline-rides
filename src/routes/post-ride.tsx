@@ -1,8 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PlaceInput } from "@/components/PlaceInput";
+import { computeRoute } from "@/lib/maps.functions";
+import { formatDistance, formatDuration, suggestedFare, type PlacePick } from "@/lib/maps";
+import { money } from "@/lib/rides";
 
 export const Route = createFileRoute("/post-ride")({
   head: () => ({
@@ -11,25 +16,31 @@ export const Route = createFileRoute("/post-ride")({
       {
         name: "description",
         content:
-          "Drivers: publish your route, pickup and drop points, seats and price per seat for riders across the GTA and BC.",
+          "Drivers: publish your route with verified addresses, real mileage and a fair price per seat for riders across the GTA and BC.",
       },
       { property: "og:title", content: "Post a ride — Crossline Carpool" },
       {
         property: "og:description",
-        content: "Publish your route, stops, seats and CAD price per seat.",
+        content: "Publish your route with Google Maps addresses, mileage and CAD price per seat.",
       },
     ],
   }),
   component: PostRide,
 });
 
+type RouteInfo = { distanceKm: number; durationMin: number; polyline: string | null };
+
 function PostRide() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const runComputeRoute = useServerFn(computeRoute);
 
   const [origin, setOrigin] = useState("");
+  const [originPick, setOriginPick] = useState<PlacePick | null>(null);
   const [destination, setDestination] = useState("");
-  const [stops, setStops] = useState("");
+  const [destinationPick, setDestinationPick] = useState<PlacePick | null>(null);
+  const [stopDraft, setStopDraft] = useState("");
+  const [stops, setStops] = useState<PlacePick[]>([]);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("08:00");
   const [arriveTime, setArriveTime] = useState("");
@@ -38,10 +49,43 @@ function PostRide() {
   const [car, setCar] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const [routing, setRouting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (!originPick || !destinationPick) {
+      setRouteInfo(null);
+      return;
+    }
+    let cancelled = false;
+    setRouting(true);
+    runComputeRoute({
+      data: {
+        origin: `place_id:${originPick.placeId}`,
+        destination: `place_id:${destinationPick.placeId}`,
+        stops: stops.map((s) => `place_id:${s.placeId}`),
+      },
+    })
+      .then((result) => {
+        if (!cancelled) setRouteInfo(result);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setRouteInfo(null);
+          toast.error(err instanceof Error ? err.message : "Could not calculate the route");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setRouting(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [originPick, destinationPick, stops, runComputeRoute]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,10 +102,7 @@ function PostRide() {
           driver_id: user.id,
           origin,
           destination,
-          stops: stops
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+          stops: stops.map((s) => s.address),
           depart_at: departAt.toISOString(),
           arrive_at: arriveAt ? arriveAt.toISOString() : null,
           seats_total: seats,
@@ -69,6 +110,15 @@ function PostRide() {
           price_per_seat: Number(price),
           car: car || null,
           notes: notes || null,
+          origin_place_id: originPick?.placeId ?? null,
+          destination_place_id: destinationPick?.placeId ?? null,
+          origin_lat: originPick?.lat ?? null,
+          origin_lng: originPick?.lng ?? null,
+          destination_lat: destinationPick?.lat ?? null,
+          destination_lng: destinationPick?.lng ?? null,
+          distance_km: routeInfo?.distanceKm ?? null,
+          duration_min: routeInfo?.durationMin ?? null,
+          route_polyline: routeInfo?.polyline ?? null,
         })
         .select("id")
         .single();
@@ -88,27 +138,101 @@ function PostRide() {
   const label =
     "block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5";
 
+  const suggestion = routeInfo ? suggestedFare(routeInfo.distanceKm) : null;
+
   return (
     <div className="mx-auto max-w-2xl px-5 sm:px-8 pt-10 pb-16">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">Drive with us</p>
       <h1 className="font-display font-semibold text-foreground text-3xl mt-2">Post a ride</h1>
       <p className="text-sm text-muted-foreground mt-2">
-        Add your route points and set a fair price per seat. Riders pay in app when they book.
+        Start typing an address and pick it from the list — Crossline measures the real driving
+        distance and suggests a fair price per seat.
       </p>
 
       <form onSubmit={submit} className="mt-7 rounded-[22px] ring-1 ring-black/5 bg-card p-5 sm:p-7 space-y-4">
         <div>
           <label className={label} htmlFor="pr-origin">Pick up</label>
-          <input id="pr-origin" className={field} value={origin} onChange={(e) => setOrigin(e.target.value)} required placeholder="Mississauga, ON" />
+          <PlaceInput
+            id="pr-origin"
+            className={field}
+            value={origin}
+            onChange={(v) => {
+              setOrigin(v);
+              setOriginPick(null);
+            }}
+            onPick={(p) => setOriginPick(p)}
+            required
+            placeholder="Square One, Mississauga, ON"
+          />
         </div>
+
         <div>
-          <label className={label} htmlFor="pr-stops">Stops along the way (comma separated)</label>
-          <input id="pr-stops" className={field} value={stops} onChange={(e) => setStops(e.target.value)} placeholder="Oakville, Burlington" />
+          <label className={label} htmlFor="pr-stops">Stops along the way (optional)</label>
+          <PlaceInput
+            id="pr-stops"
+            className={field}
+            value={stopDraft}
+            onChange={setStopDraft}
+            onPick={(p) => {
+              setStops((prev) => (prev.length >= 5 ? prev : [...prev, p]));
+              setStopDraft("");
+            }}
+            placeholder="Oakville GO, Oakville, ON"
+          />
+          {stops.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {stops.map((s, i) => (
+                <button
+                  key={`${s.placeId}-${i}`}
+                  type="button"
+                  onClick={() => setStops((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="rounded-full bg-background ring-1 ring-line px-3 py-1 text-xs text-foreground"
+                >
+                  {s.address} ×
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
         <div>
           <label className={label} htmlFor="pr-destination">Drop off</label>
-          <input id="pr-destination" className={field} value={destination} onChange={(e) => setDestination(e.target.value)} required placeholder="Ottawa, ON" />
+          <PlaceInput
+            id="pr-destination"
+            className={field}
+            value={destination}
+            onChange={(v) => {
+              setDestination(v);
+              setDestinationPick(null);
+            }}
+            onPick={(p) => setDestinationPick(p)}
+            required
+            placeholder="ByWard Market, Ottawa, ON"
+          />
         </div>
+
+        {(routing || routeInfo) && (
+          <div className="rounded-[14px] bg-background ring-1 ring-line px-4 py-3 text-sm">
+            {routing ? (
+              <span className="text-muted-foreground">Measuring the route…</span>
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span className="text-foreground font-medium">
+                  {formatDistance(routeInfo!.distanceKm)} · {formatDuration(routeInfo!.durationMin)} drive
+                </span>
+                {suggestion != null && (
+                  <button
+                    type="button"
+                    onClick={() => setPrice(String(suggestion))}
+                    className="text-primary-deep font-medium"
+                  >
+                    Use suggested fare {money(suggestion)}/seat
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div>

@@ -113,11 +113,20 @@ export type Database = {
           created_at: string
           depart_at: string
           destination: string
+          destination_lat: number | null
+          destination_lng: number | null
+          destination_place_id: string | null
+          distance_km: number | null
           driver_id: string
+          duration_min: number | null
           id: string
           notes: string | null
           origin: string
+          origin_lat: number | null
+          origin_lng: number | null
+          origin_place_id: string | null
           price_per_seat: number
+          route_polyline: string | null
           seats_available: number
           seats_total: number
           status: string
@@ -130,11 +139,20 @@ export type Database = {
           created_at?: string
           depart_at: string
           destination: string
+          destination_lat?: number | null
+          destination_lng?: number | null
+          destination_place_id?: string | null
+          distance_km?: number | null
           driver_id: string
+          duration_min?: number | null
           id?: string
           notes?: string | null
           origin: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          origin_place_id?: string | null
           price_per_seat: number
+          route_polyline?: string | null
           seats_available?: number
           seats_total?: number
           status?: string
@@ -147,11 +165,20 @@ export type Database = {
           created_at?: string
           depart_at?: string
           destination?: string
+          destination_lat?: number | null
+          destination_lng?: number | null
+          destination_place_id?: string | null
+          distance_km?: number | null
           driver_id?: string
+          duration_min?: number | null
           id?: string
           notes?: string | null
           origin?: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          origin_place_id?: string | null
           price_per_seat?: number
+          route_polyline?: string | null
           seats_available?: number
           seats_total?: number
           status?: string

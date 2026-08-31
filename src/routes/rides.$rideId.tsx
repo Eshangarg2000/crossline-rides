@@ -1,11 +1,15 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { dayOf, getRide, money, timeOf } from "@/lib/rides";
 import { quoteBooking } from "@/lib/fees";
 import { RideCheckout } from "@/components/RideCheckout";
 import highway from "@/assets/highway-merge.jpg";
+import { formatDistance, formatDuration } from "@/lib/maps";
+
+const RouteMap = lazy(() => import("@/components/RouteMap"));
 
 export const Route = createFileRoute("/rides/$rideId")({
   head: () => ({
@@ -61,6 +65,18 @@ function RideDetail() {
     setCheckingOut(true);
   }
 
+  const originPoint =
+    ride.origin_lat != null && ride.origin_lng != null
+      ? { lat: Number(ride.origin_lat), lng: Number(ride.origin_lng) }
+      : null;
+  const destinationPoint =
+    ride.destination_lat != null && ride.destination_lng != null
+      ? { lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }
+      : null;
+  const hasMap = Boolean(ride.route_polyline || originPoint || destinationPoint);
+  const distanceLabel = ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null;
+  const durationLabel = formatDuration(ride.duration_min ?? null);
+
   const stops = [
     { label: `${timeOf(ride.depart_at)} — ${ride.origin}`, tone: "start" as const },
     ...ride.stops.map((s) => ({ label: s, tone: "mid" as const })),
@@ -74,13 +90,25 @@ function RideDetail() {
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 pb-16">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3 rounded-[22px] ring-1 ring-black/5 bg-card overflow-hidden">
-          <img
-            src={highway}
-            alt="Golden hour view of a Canadian highway merging into one lane"
-            width={1440}
-            height={760}
-            className="w-full aspect-[16/8] object-cover"
-          />
+          {hasMap ? (
+            <ClientOnly fallback={<div className="w-full aspect-[16/8] bg-background" />}>
+              <Suspense fallback={<div className="w-full aspect-[16/8] bg-background" />}>
+                <RouteMap
+                  polyline={ride.route_polyline ?? null}
+                  origin={originPoint}
+                  destination={destinationPoint}
+                />
+              </Suspense>
+            </ClientOnly>
+          ) : (
+            <img
+              src={highway}
+              alt="Golden hour view of a Canadian highway merging into one lane"
+              width={1440}
+              height={760}
+              className="w-full aspect-[16/8] object-cover"
+            />
+          )}
           <div className="p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -92,6 +120,11 @@ function RideDetail() {
                   {ride.driver?.full_name ?? "Driver"} · {ride.driver?.rating?.toFixed(1) ?? "5.0"}
                   {ride.car ? ` · ${ride.car}` : ""} · departs {dayOf(ride.depart_at)} {timeOf(ride.depart_at)}
                 </p>
+                {(distanceLabel || durationLabel) && (
+                  <p className="text-sm text-foreground font-medium mt-1.5">
+                    {[distanceLabel, durationLabel && `${durationLabel} drive`].filter(Boolean).join(" · ")}
+                  </p>
+                )}
               </div>
               <div className="text-right shrink-0">
                 <p className="font-display font-semibold text-foreground text-3xl leading-none">{money(price)}</p>
