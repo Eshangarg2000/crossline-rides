@@ -16,8 +16,8 @@ export function SiteHeader() {
 
   return (
     <header className="mx-auto max-w-6xl px-5 sm:px-8 pt-6">
-      <div className="flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between gap-4 lg:gap-8">
+        <Link to="/" className="flex items-center gap-2.5 shrink-0">
           <span className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground font-display font-semibold text-lg">
             C
           </span>
@@ -26,7 +26,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-7 text-sm text-muted-foreground">
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-7 text-sm text-muted-foreground whitespace-nowrap">
           <Link to="/rides" className="hover:text-foreground">
             Find a ride
           </Link>
@@ -46,7 +46,7 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
           {user ? (
             <button
               onClick={async () => {
