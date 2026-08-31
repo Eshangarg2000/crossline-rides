@@ -120,7 +120,7 @@ export async function cancelRideAsDriver(ctx: Ctx, rideId: string, reason: strin
   const { error: rideErr } = await supabaseAdmin.rpc("cancel_ride_atomic", {
     _ride_id: rideId,
     _actor: ctx.userId,
-    _reason: reason || null,
+    _reason: reason || "The driver cancelled this ride.",
   });
   if (rideErr) throw new Error(rideErr.message);
 
