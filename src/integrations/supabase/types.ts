@@ -14,50 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          completed_at: string | null
           created_at: string
           driver_payout: number
+          dropoff_request: string | null
+          estimated_detour_min: number | null
+          hold_expires_at: string | null
           id: string
           payment_environment: string
           payment_status: string
+          pickup_point: Json | null
+          pickup_request: string | null
+          refund_amount: number
           ride_id: string
           rider_id: string
           seats: number
+          seats_released_at: string | null
           service_fee: number
           status: string
+          stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           tax_amount: number
           total_amount: number
           updated_at: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          completed_at?: string | null
           created_at?: string
           driver_payout?: number
+          dropoff_request?: string | null
+          estimated_detour_min?: number | null
+          hold_expires_at?: string | null
           id?: string
           payment_environment?: string
           payment_status?: string
+          pickup_point?: Json | null
+          pickup_request?: string | null
+          refund_amount?: number
           ride_id: string
           rider_id: string
           seats?: number
+          seats_released_at?: string | null
           service_fee?: number
           status?: string
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           tax_amount?: number
           total_amount: number
           updated_at?: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          completed_at?: string | null
           created_at?: string
           driver_payout?: number
+          dropoff_request?: string | null
+          estimated_detour_min?: number | null
+          hold_expires_at?: string | null
           id?: string
           payment_environment?: string
           payment_status?: string
+          pickup_point?: Json | null
+          pickup_request?: string | null
+          refund_amount?: number
           ride_id?: string
           rider_id?: string
           seats?: number
+          seats_released_at?: string | null
           service_fee?: number
           status?: string
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           tax_amount?: number
           total_amount?: number
@@ -199,6 +265,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -238,7 +340,10 @@ export type Database = {
       rides: {
         Row: {
           arrive_at: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
           car: string | null
+          completed_at: string | null
           created_at: string
           depart_at: string
           destination: string
@@ -249,12 +354,16 @@ export type Database = {
           driver_id: string
           duration_min: number | null
           id: string
+          max_detour_min: number
           notes: string | null
           origin: string
           origin_lat: number | null
           origin_lng: number | null
           origin_place_id: string | null
+          pickup_flexibility: string
           price_per_seat: number
+          recurrence: Json | null
+          ride_kind: string
           route_polyline: string | null
           seats_available: number
           seats_total: number
@@ -264,7 +373,10 @@ export type Database = {
         }
         Insert: {
           arrive_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           car?: string | null
+          completed_at?: string | null
           created_at?: string
           depart_at: string
           destination: string
@@ -275,12 +387,16 @@ export type Database = {
           driver_id: string
           duration_min?: number | null
           id?: string
+          max_detour_min?: number
           notes?: string | null
           origin: string
           origin_lat?: number | null
           origin_lng?: number | null
           origin_place_id?: string | null
+          pickup_flexibility?: string
           price_per_seat: number
+          recurrence?: Json | null
+          ride_kind?: string
           route_polyline?: string | null
           seats_available?: number
           seats_total?: number
@@ -290,7 +406,10 @@ export type Database = {
         }
         Update: {
           arrive_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           car?: string | null
+          completed_at?: string | null
           created_at?: string
           depart_at?: string
           destination?: string
@@ -301,18 +420,43 @@ export type Database = {
           driver_id?: string
           duration_min?: number | null
           id?: string
+          max_detour_min?: number
           notes?: string | null
           origin?: string
           origin_lat?: number | null
           origin_lng?: number | null
           origin_place_id?: string | null
+          pickup_flexibility?: string
           price_per_seat?: number
+          recurrence?: Json | null
+          ride_kind?: string
           route_polyline?: string | null
           seats_available?: number
           seats_total?: number
           status?: string
           stops?: string[]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      stripe_events: {
+        Row: {
+          environment: string
+          id: string
+          processed_at: string
+          type: string
+        }
+        Insert: {
+          environment: string
+          id: string
+          processed_at?: string
+          type: string
+        }
+        Update: {
+          environment?: string
+          id?: string
+          processed_at?: string
+          type?: string
         }
         Relationships: []
       }
@@ -342,6 +486,116 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_booking_atomic: {
+        Args: {
+          _actor: string
+          _booking_id: string
+          _by_driver?: boolean
+          _reason: string
+          _refund: number
+        }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          completed_at: string | null
+          created_at: string
+          driver_payout: number
+          dropoff_request: string | null
+          estimated_detour_min: number | null
+          hold_expires_at: string | null
+          id: string
+          payment_environment: string
+          payment_status: string
+          pickup_point: Json | null
+          pickup_request: string | null
+          refund_amount: number
+          ride_id: string
+          rider_id: string
+          seats: number
+          seats_released_at: string | null
+          service_fee: number
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_ride_atomic: {
+        Args: { _actor: string; _reason: string; _ride_id: string }
+        Returns: undefined
+      }
+      complete_due_rides: { Args: never; Returns: number }
+      confirm_booking_paid: {
+        Args: {
+          _booking_id: string
+          _environment: string
+          _payment_intent: string
+          _tax: number
+          _total: number
+        }
+        Returns: boolean
+      }
+      create_booking_hold: {
+        Args: {
+          _environment: string
+          _hold_minutes?: number
+          _ride_id: string
+          _seats: number
+        }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          completed_at: string | null
+          created_at: string
+          driver_payout: number
+          dropoff_request: string | null
+          estimated_detour_min: number | null
+          hold_expires_at: string | null
+          id: string
+          payment_environment: string
+          payment_status: string
+          pickup_point: Json | null
+          pickup_request: string | null
+          refund_amount: number
+          ride_id: string
+          rider_id: string
+          seats: number
+          seats_released_at: string | null
+          service_fee: number
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      expire_stale_holds: { Args: { _ride_id?: string }; Returns: number }
+      fail_booking: {
+        Args: {
+          _booking_id: string
+          _environment: string
+          _payment_status: string
+          _reason: string
+        }
+        Returns: boolean
+      }
       get_public_driver_profiles: {
         Args: { ids: string[] }
         Returns: {
@@ -359,6 +613,28 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_approved_driver: { Args: { _user_id: string }; Returns: boolean }
+      log_audit: {
+        Args: {
+          _action: string
+          _actor: string
+          _entity_id: string
+          _entity_type: string
+          _metadata?: Json
+        }
+        Returns: undefined
+      }
+      notify_user: {
+        Args: {
+          _body: string
+          _entity_id: string
+          _entity_type: string
+          _title: string
+          _type: string
+          _user: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
