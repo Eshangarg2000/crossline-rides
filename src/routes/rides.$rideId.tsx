@@ -8,6 +8,7 @@ import { quoteBooking } from "@/lib/fees";
 import { RideCheckout } from "@/components/RideCheckout";
 import highway from "@/assets/highway-merge.jpg";
 import { formatDistance, formatDuration } from "@/lib/maps";
+import { getRideRoute } from "@/lib/ride-route.functions";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
@@ -33,9 +34,21 @@ function RideDetail() {
   const [seats, setSeats] = useState(1);
   const [checkingOut, setCheckingOut] = useState(false);
 
+  const [mapOpen, setMapOpen] = useState(false);
+
   const { data: ride, isLoading } = useQuery({
     queryKey: ["ride", rideId],
     queryFn: () => getRide(rideId),
+  });
+
+  const { data: route, isLoading: routeLoading } = useQuery({
+    queryKey: ["ride-route", rideId],
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const result = await getRideRoute({ data: { rideId } });
+      if ("error" in result) return null;
+      return result;
+    },
   });
 
   if (isLoading) {
@@ -66,16 +79,20 @@ function RideDetail() {
   }
 
   const originPoint =
-    ride.origin_lat != null && ride.origin_lng != null
+    route?.origin ??
+    (ride.origin_lat != null && ride.origin_lng != null
       ? { lat: Number(ride.origin_lat), lng: Number(ride.origin_lng) }
-      : null;
+      : null);
   const destinationPoint =
-    ride.destination_lat != null && ride.destination_lng != null
+    route?.destination ??
+    (ride.destination_lat != null && ride.destination_lng != null
       ? { lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }
-      : null;
-  const hasMap = Boolean(ride.route_polyline || originPoint || destinationPoint);
-  const distanceLabel = ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null;
-  const durationLabel = formatDuration(ride.duration_min ?? null);
+      : null);
+  const polyline = route?.polyline ?? ride.route_polyline ?? null;
+  const hasMap = Boolean(polyline || originPoint || destinationPoint);
+  const distanceKm = route?.distanceKm ?? (ride.distance_km != null ? Number(ride.distance_km) : null);
+  const distanceLabel = formatDistance(distanceKm);
+  const durationLabel = formatDuration(route?.durationMin ?? ride.duration_min ?? null);
 
   const stops = [
     { label: `${timeOf(ride.depart_at)} — ${ride.origin}`, tone: "start" as const },
@@ -90,25 +107,37 @@ function RideDetail() {
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 pb-16">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3 rounded-[22px] ring-1 ring-black/5 bg-card overflow-hidden">
-          {hasMap ? (
-            <ClientOnly fallback={<div className="w-full aspect-[16/8] bg-background" />}>
-              <Suspense fallback={<div className="w-full aspect-[16/8] bg-background" />}>
-                <RouteMap
-                  polyline={ride.route_polyline ?? null}
-                  origin={originPoint}
-                  destination={destinationPoint}
-                />
-              </Suspense>
-            </ClientOnly>
-          ) : (
-            <img
-              src={highway}
-              alt="Golden hour view of a Canadian highway merging into one lane"
-              width={1440}
-              height={760}
-              className="w-full aspect-[16/8] object-cover"
-            />
-          )}
+          <div className="relative">
+            {hasMap ? (
+              <ClientOnly fallback={<div className="w-full aspect-[16/8] bg-background" />}>
+                <Suspense fallback={<div className="w-full aspect-[16/8] bg-background" />}>
+                  <RouteMap polyline={polyline} origin={originPoint} destination={destinationPoint} />
+                </Suspense>
+              </ClientOnly>
+            ) : (
+              <img
+                src={highway}
+                alt="Golden hour view of a Canadian highway merging into one lane"
+                width={1440}
+                height={760}
+                className="w-full aspect-[16/8] object-cover"
+              />
+            )}
+            {routeLoading && !hasMap && (
+              <span className="absolute left-4 top-4 rounded-full bg-card/90 px-3 py-1 text-xs text-muted-foreground">
+                Drawing the route…
+              </span>
+            )}
+            {hasMap && (
+              <button
+                type="button"
+                onClick={() => setMapOpen(true)}
+                className="absolute right-4 top-4 rounded-full bg-card/95 ring-1 ring-black/10 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-sm"
+              >
+                Expand map
+              </button>
+            )}
+          </div>
           <div className="p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -171,6 +200,23 @@ function RideDetail() {
             {ride.seats_available} of {ride.seats_total} seats still open.
           </p>
 
+          {hasMap && (
+            <button
+              type="button"
+              onClick={() => setMapOpen(true)}
+              className="mt-4 w-full rounded-[14px] bg-background ring-1 ring-line px-4 py-3 text-left"
+            >
+              <span className="block text-sm font-medium text-foreground">
+                {ride.origin} → {ride.destination}
+              </span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                {[distanceLabel, durationLabel && `${durationLabel} drive`, "view route on map"]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            </button>
+          )}
+
           <label htmlFor="booking-seats" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-5 mb-1.5">
             Seats
           </label>
@@ -227,6 +273,52 @@ function RideDetail() {
           </p>
         </div>
       </div>
+
+      {mapOpen && hasMap && (
+        <div
+          className="fixed inset-0 z-50 bg-foreground/60 backdrop-blur-sm grid place-items-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ride route map"
+          onClick={() => setMapOpen(false)}
+        >
+          <div
+            className="w-full max-w-4xl overflow-hidden rounded-[22px] bg-card ring-1 ring-black/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 px-5 py-4">
+              <div>
+                <p className="font-display font-semibold text-foreground">
+                  {ride.origin} → {ride.destination}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {[distanceLabel, durationLabel && `${durationLabel} drive`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  {ride.stops.length > 0 ? ` · via ${ride.stops.join(" → ")}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMapOpen(false)}
+                className="rounded-full bg-background ring-1 ring-line px-3.5 py-1.5 text-xs font-semibold text-foreground"
+              >
+                Close
+              </button>
+            </div>
+            <ClientOnly fallback={<div className="w-full aspect-[4/3] sm:aspect-[16/9] bg-background" />}>
+              <Suspense fallback={<div className="w-full aspect-[4/3] sm:aspect-[16/9] bg-background" />}>
+                <RouteMap
+                  polyline={polyline}
+                  origin={originPoint}
+                  destination={destinationPoint}
+                  className="w-full aspect-[4/3] sm:aspect-[16/9]"
+                />
+              </Suspense>
+            </ClientOnly>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
