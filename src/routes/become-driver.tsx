@@ -91,13 +91,12 @@ function BecomeDriver() {
       next[key] = value == null ? EMPTY[key]! : String(value);
     }
     setForm(next);
-    setDocs({
-      licence_front_path: application.licence_front_path ?? undefined,
-      licence_back_path: application.licence_back_path ?? undefined,
-      insurance_path: application.insurance_path ?? undefined,
-      registration_path: application.registration_path ?? undefined,
-      abstract_path: application.abstract_path ?? undefined,
-    });
+    const nextDocs: Partial<Record<DocumentKey, string>> = {};
+    for (const doc of DOCUMENTS) {
+      const path = (application as unknown as Record<string, string | null>)[doc.key];
+      if (path) nextDocs[doc.key] = path;
+    }
+    setDocs(nextDocs);
     setConsents({
       background: application.consent_background_check,
       terms: application.consent_terms,

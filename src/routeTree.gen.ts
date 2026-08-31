@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BecomeDriverRouteImport } from './routes/become-driver'
 import { Route as MyTripsRouteImport } from './routes/my-trips'
 import { Route as PostRideRouteImport } from './routes/post-ride'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -27,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BecomeDriverRoute = BecomeDriverRouteImport.update({
+  id: '/become-driver',
+  path: '/become-driver',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyTripsRoute = MyTripsRouteImport.update({
@@ -69,6 +75,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/become-driver': typeof BecomeDriverRoute
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/become-driver': typeof BecomeDriverRoute
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/become-driver': typeof BecomeDriverRoute
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/become-driver'
     | '/my-trips'
     | '/post-ride'
     | '/sitemap.xml'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/become-driver'
     | '/my-trips'
     | '/post-ride'
     | '/sitemap.xml'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/become-driver'
     | '/my-trips'
     | '/post-ride'
     | '/sitemap.xml'
@@ -139,6 +151,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BecomeDriverRoute: typeof BecomeDriverRoute
   MyTripsRoute: typeof MyTripsRoute
   PostRideRoute: typeof PostRideRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/become-driver': {
+      id: '/become-driver'
+      path: '/become-driver'
+      fullPath: '/become-driver'
+      preLoaderRoute: typeof BecomeDriverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-trips': {
@@ -219,6 +239,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BecomeDriverRoute: BecomeDriverRoute,
   MyTripsRoute: MyTripsRoute,
   PostRideRoute: PostRideRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
