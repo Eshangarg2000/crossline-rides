@@ -241,11 +241,20 @@ function RideDetail() {
               <span className="text-muted-foreground">Service fee</span>
               <span className="text-foreground">{money(quote.serviceFee)}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Tax on service fee</span>
+              <span className="text-foreground">Calculated at checkout</span>
+            </div>
             <div className="flex justify-between border-t border-line pt-2">
-              <span className="font-medium text-foreground">Total</span>
+              <span className="font-medium text-foreground">Total before tax</span>
               <span className="font-display font-semibold text-foreground">{money(quote.total)}</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              GST, HST or PST is applied to the Crossline service fee based on your province. The
+              driver's cost-sharing fare is not taxed.
+            </p>
           </div>
+
 
           {checkingOut ? (
             <RideCheckout
