@@ -74,20 +74,35 @@ export async function startRideCheckout(
     ui_mode: "embedded_page",
     return_url: input.returnUrl,
     customer: customerId,
+    // Stripe calculates GST/HST/PST from the rider's billing province.
+    automatic_tax: { enabled: true },
+    billing_address_collection: "required",
+    customer_update: { address: "auto", name: "auto" },
     line_items: [
       {
         price_data: {
           currency: "cad",
-          product_data: { name: `Carpool seat · ${label}` },
+          // Cost-sharing carpool fare paid to the driver: not a taxable
+          // commercial supply, so it is classified as non-taxable.
+          product_data: {
+            name: `Carpool seat · ${label}`,
+            tax_code: "txcd_00000000",
+          },
           unit_amount: Math.round(Number(ride.price_per_seat) * 100),
+          tax_behavior: "exclusive",
         },
         quantity: input.seats,
       },
       {
         price_data: {
           currency: "cad",
-          product_data: { name: "Crossline service fee" },
+          // Crossline's marketplace service: a taxable electronic service.
+          product_data: {
+            name: "Crossline service fee",
+            tax_code: "txcd_10103001",
+          },
           unit_amount: Math.round(quote.serviceFee * 100),
+          tax_behavior: "exclusive",
         },
         quantity: 1,
       },
@@ -100,8 +115,10 @@ export async function startRideCheckout(
       seats: String(input.seats),
       serviceFee: String(quote.serviceFee),
       driverPayout: String(quote.driverPayout),
+      managed_payments: "false",
     },
   });
+
 
   await supabase
     .from("bookings")
