@@ -27,6 +27,7 @@ export type Database = {
           service_fee: number
           status: string
           stripe_session_id: string | null
+          tax_amount: number
           total_amount: number
           updated_at: string
         }
@@ -42,6 +43,7 @@ export type Database = {
           service_fee?: number
           status?: string
           stripe_session_id?: string | null
+          tax_amount?: number
           total_amount: number
           updated_at?: string
         }
@@ -57,6 +59,7 @@ export type Database = {
           service_fee?: number
           status?: string
           stripe_session_id?: string | null
+          tax_amount?: number
           total_amount?: number
           updated_at?: string
         }
