@@ -200,6 +200,23 @@ function RideDetail() {
             {ride.seats_available} of {ride.seats_total} seats still open.
           </p>
 
+          {hasMap && (
+            <button
+              type="button"
+              onClick={() => setMapOpen(true)}
+              className="mt-4 w-full rounded-[14px] bg-background ring-1 ring-line px-4 py-3 text-left"
+            >
+              <span className="block text-sm font-medium text-foreground">
+                {ride.origin} → {ride.destination}
+              </span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                {[distanceLabel, durationLabel && `${durationLabel} drive`, "view route on map"]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            </button>
+          )}
+
           <label htmlFor="booking-seats" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-5 mb-1.5">
             Seats
           </label>
@@ -256,6 +273,52 @@ function RideDetail() {
           </p>
         </div>
       </div>
+
+      {mapOpen && hasMap && (
+        <div
+          className="fixed inset-0 z-50 bg-foreground/60 backdrop-blur-sm grid place-items-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ride route map"
+          onClick={() => setMapOpen(false)}
+        >
+          <div
+            className="w-full max-w-4xl overflow-hidden rounded-[22px] bg-card ring-1 ring-black/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 px-5 py-4">
+              <div>
+                <p className="font-display font-semibold text-foreground">
+                  {ride.origin} → {ride.destination}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {[distanceLabel, durationLabel && `${durationLabel} drive`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  {ride.stops.length > 0 ? ` · via ${ride.stops.join(" → ")}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMapOpen(false)}
+                className="rounded-full bg-background ring-1 ring-line px-3.5 py-1.5 text-xs font-semibold text-foreground"
+              >
+                Close
+              </button>
+            </div>
+            <ClientOnly fallback={<div className="w-full aspect-[4/3] sm:aspect-[16/9] bg-background" />}>
+              <Suspense fallback={<div className="w-full aspect-[4/3] sm:aspect-[16/9] bg-background" />}>
+                <RouteMap
+                  polyline={polyline}
+                  origin={originPoint}
+                  destination={destinationPoint}
+                  className="w-full aspect-[4/3] sm:aspect-[16/9]"
+                />
+              </Suspense>
+            </ClientOnly>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
