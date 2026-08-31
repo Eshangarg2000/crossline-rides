@@ -13,44 +13,72 @@ function getSupabase() {
   return _supabase;
 }
 
+/**
+ * Records the Stripe event id. Returns false when the event was already
+ * processed, so retried/duplicated deliveries become no-ops.
+ */
+async function claimEvent(id: string, type: string, env: StripeEnv): Promise<boolean> {
+  if (!id) return true;
+  const { error } = await getSupabase()
+    .from("stripe_events")
+    .insert({ id, type, environment: env });
+  if (error) {
+    if (error.code === "23505") return false; // already processed
+    throw new Error(error.message);
+  }
+  return true;
+}
+
 async function markBookingPaid(session: any, env: StripeEnv) {
   const bookingId = session?.metadata?.bookingId;
   if (!bookingId) {
     console.error("Checkout session without bookingId metadata", session?.id);
     return;
   }
-  const taxCents = session?.total_details?.amount_tax ?? 0;
+  const taxCents = session?.total_details?.amount_tax ?? null;
   const totalCents = session?.amount_total ?? null;
-  await getSupabase()
-    .from("bookings")
-    .update({
-      payment_status: "paid",
-      status: "confirmed",
-      tax_amount: taxCents / 100,
-      ...(totalCents !== null ? { total_amount: totalCents / 100 } : {}),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", bookingId)
-    .eq("payment_environment", env);
+  const paymentIntent =
+    typeof session?.payment_intent === "string"
+      ? session.payment_intent
+      : (session?.payment_intent?.id ?? null);
 
+  const { error } = await getSupabase().rpc("confirm_booking_paid", {
+    _booking_id: bookingId,
+    _environment: env,
+    _tax: taxCents === null ? null : taxCents / 100,
+    _total: totalCents === null ? null : totalCents / 100,
+    _payment_intent: paymentIntent,
+  });
+  if (error) throw new Error(error.message);
 }
 
-async function markBookingFailed(session: any, env: StripeEnv) {
+async function markBookingFailed(session: any, env: StripeEnv, status: "failed" | "expired") {
   const bookingId = session?.metadata?.bookingId;
   if (!bookingId) return;
-  await getSupabase()
-    .from("bookings")
-    .update({
-      payment_status: "failed",
-      status: "cancelled",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", bookingId)
-    .eq("payment_environment", env);
+  const { error } = await getSupabase().rpc("fail_booking", {
+    _booking_id: bookingId,
+    _environment: env,
+    _payment_status: status,
+    _reason:
+      status === "expired"
+        ? "Checkout expired before payment completed — your seat hold was released."
+        : "Payment failed — your seat hold was released.",
+  });
+  if (error) throw new Error(error.message);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
-  const event = await verifyWebhook(req, env);
+  const event = (await verifyWebhook(req, env)) as {
+    id: string;
+    type: string;
+    data: { object: any };
+  };
+
+  const fresh = await claimEvent(event.id, event.type, env);
+  if (!fresh) {
+    console.log("Duplicate Stripe event ignored:", event.id);
+    return;
+  }
 
   switch (event.type) {
     case "checkout.session.completed": {
@@ -62,12 +90,17 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       await markBookingPaid(event.data.object, env);
       break;
     case "checkout.session.async_payment_failed":
+      await markBookingFailed(event.data.object, env, "failed");
+      break;
     case "checkout.session.expired":
-      await markBookingFailed(event.data.object, env);
+      await markBookingFailed(event.data.object, env, "expired");
       break;
     default:
       console.log("Unhandled event:", event.type);
   }
+
+  // Housekeeping: release any seat holds whose checkout was simply abandoned.
+  await getSupabase().rpc("expire_stale_holds", { _ride_id: null });
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
