@@ -8,6 +8,20 @@ const getEnv = (key: string): string => {
 
 export type StripeEnv = 'sandbox' | 'live';
 
+/**
+ * The payment environment is decided by the deployment, never by the browser.
+ * Priority: explicit PAYMENTS_ENVIRONMENT secret, then the publishable token
+ * baked into this build (pk_live_* in production, pk_test_* in preview).
+ */
+export function getServerStripeEnv(): StripeEnv {
+  const explicit = process.env['PAYMENTS_ENVIRONMENT'];
+  if (explicit === 'live' || explicit === 'sandbox') return explicit;
+  const token =
+    (import.meta.env?.['VITE_PAYMENTS_CLIENT_TOKEN'] as string | undefined) ??
+    process.env['VITE_PAYMENTS_CLIENT_TOKEN'];
+  return token?.startsWith('pk_live_') ? 'live' : 'sandbox';
+}
+
 const GATEWAY_STRIPE_BASE = 'https://connector-gateway.lovable.dev/stripe';
 
 export function getConnectionApiKey(env: StripeEnv): string {
