@@ -38,7 +38,7 @@ export const Route = createFileRoute("/rides/")({
 
 function RidesPage() {
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/rides" });
+  const navigate = useNavigate({ from: "/rides/" });
 
   const [from, setFrom] = useState(search.from ?? "");
   const [to, setTo] = useState(search.to ?? "");
@@ -51,7 +51,7 @@ function RidesPage() {
   });
 
   function apply(next: Search) {
-    navigate({ search: next });
+    navigate({ search: () => next });
   }
 
   const field =
