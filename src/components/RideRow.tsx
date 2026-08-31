@@ -45,10 +45,12 @@ export function RideRow({ ride }: { ride: RideWithDriver }) {
             </div>
             <p className="text-xs text-muted-foreground">
               {dayOf(ride.depart_at)}
+              {routeLabel ? ` · ${routeLabel}` : ""}
               {ride.stops.length > 0
                 ? ` · stops: ${ride.stops.join(" → ")}`
                 : " · direct, no stops"}
             </p>
+
           </div>
 
           <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">
