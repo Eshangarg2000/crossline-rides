@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { dayOf, initials, money, timeOf, type RideWithDriver } from "@/lib/rides";
+import { formatPlace, dayOf, initials, money, timeOf, type RideWithDriver } from "@/lib/rides";
 import { formatDistance, formatDuration } from "@/lib/maps";
 
 export function RideRow({ ride }: { ride: RideWithDriver }) {
@@ -31,11 +31,11 @@ export function RideRow({ ride }: { ride: RideWithDriver }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-4 text-sm font-medium text-foreground">
               <span className="truncate">
-                {timeOf(ride.depart_at)} · {ride.origin}
+                {timeOf(ride.depart_at)} · {formatPlace(ride.origin)}
               </span>
               <span className="truncate text-right">
                 {ride.arrive_at ? `${timeOf(ride.arrive_at)} · ` : ""}
-                {ride.destination}
+                {formatPlace(ride.destination)}
               </span>
             </div>
             <div className="relative my-3 h-px route-line">
