@@ -19,15 +19,20 @@ async function markBookingPaid(session: any, env: StripeEnv) {
     console.error("Checkout session without bookingId metadata", session?.id);
     return;
   }
+  const taxCents = session?.total_details?.amount_tax ?? 0;
+  const totalCents = session?.amount_total ?? null;
   await getSupabase()
     .from("bookings")
     .update({
       payment_status: "paid",
       status: "confirmed",
+      tax_amount: taxCents / 100,
+      ...(totalCents !== null ? { total_amount: totalCents / 100 } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", bookingId)
     .eq("payment_environment", env);
+
 }
 
 async function markBookingFailed(session: any, env: StripeEnv) {
