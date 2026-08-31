@@ -11,7 +11,7 @@ type Search = {
   seats?: number | undefined;
 };
 
-export const Route = createFileRoute("/rides")({
+export const Route = createFileRoute("/rides/")({
   validateSearch: (search: Record<string, unknown>): Search => ({
     from: typeof search['from'] === "string" ? search['from'] : undefined,
     to: typeof search['to'] === "string" ? search['to'] : undefined,
