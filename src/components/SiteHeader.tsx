@@ -1,9 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMyReviewAccess } from "@/lib/driver.functions";
 
 export function SiteHeader() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const fetchAccess = useServerFn(getMyReviewAccess);
+  const { data: access } = useQuery({
+    queryKey: ["review-access", user?.id],
+    queryFn: () => fetchAccess(),
+    enabled: Boolean(user),
+  });
 
   return (
     <header className="mx-auto max-w-6xl px-5 sm:px-8 pt-6">
@@ -30,6 +39,11 @@ export function SiteHeader() {
           <Link to="/become-driver" className="hover:text-foreground">
             Become a driver
           </Link>
+          {access?.isReviewer && (
+            <Link to="/admin/drivers" className="hover:text-foreground">
+              Reviews
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
