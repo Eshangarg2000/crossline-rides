@@ -15,6 +15,7 @@ import { Route as BecomeDriverRouteImport } from './routes/become-driver'
 import { Route as MyTripsRouteImport } from './routes/my-trips'
 import { Route as PostRideRouteImport } from './routes/post-ride'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as RidesIndexRouteImport } from './routes/rides.index'
 import { Route as RidesRideIdRouteImport } from './routes/rides.$rideId'
@@ -50,6 +51,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDriversRoute = AdminDriversRouteImport.update({
+  id: '/admin/drivers',
+  path: '/admin/drivers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/drivers': typeof AdminDriversRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/rides/$rideId': typeof RidesRideIdRoute
   '/rides/': typeof RidesIndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/drivers': typeof AdminDriversRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/rides/$rideId': typeof RidesRideIdRoute
   '/rides': typeof RidesIndexRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/my-trips': typeof MyTripsRoute
   '/post-ride': typeof PostRideRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/drivers': typeof AdminDriversRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/rides/$rideId': typeof RidesRideIdRoute
   '/rides/': typeof RidesIndexRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/my-trips'
     | '/post-ride'
     | '/sitemap.xml'
+    | '/admin/drivers'
     | '/checkout/return'
     | '/rides/$rideId'
     | '/rides/'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/my-trips'
     | '/post-ride'
     | '/sitemap.xml'
+    | '/admin/drivers'
     | '/checkout/return'
     | '/rides/$rideId'
     | '/rides'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/my-trips'
     | '/post-ride'
     | '/sitemap.xml'
+    | '/admin/drivers'
     | '/checkout/return'
     | '/rides/$rideId'
     | '/rides/'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   MyTripsRoute: typeof MyTripsRoute
   PostRideRoute: typeof PostRideRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AdminDriversRoute: typeof AdminDriversRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   RidesRideIdRoute: typeof RidesRideIdRoute
   RidesIndexRoute: typeof RidesIndexRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/drivers': {
+      id: '/admin/drivers'
+      path: '/admin/drivers'
+      fullPath: '/admin/drivers'
+      preLoaderRoute: typeof AdminDriversRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyTripsRoute: MyTripsRoute,
   PostRideRoute: PostRideRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AdminDriversRoute: AdminDriversRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   RidesRideIdRoute: RidesRideIdRoute,
   RidesIndexRoute: RidesIndexRoute,

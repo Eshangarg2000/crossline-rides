@@ -79,6 +79,8 @@ export type Database = {
           consent_terms: boolean
           created_at: string
           date_of_birth: string | null
+          decision_reason: string | null
+          decision_source: string
           id: string
           insurance_company: string | null
           insurance_expiry: string | null
@@ -99,6 +101,7 @@ export type Database = {
           registration_path: string | null
           review_notes: string | null
           reviewed_at: string | null
+          reviewed_by: string | null
           status: Database["public"]["Enums"]["driver_app_status"]
           street_address: string | null
           submitted_at: string | null
@@ -117,6 +120,8 @@ export type Database = {
           consent_terms?: boolean
           created_at?: string
           date_of_birth?: string | null
+          decision_reason?: string | null
+          decision_source?: string
           id?: string
           insurance_company?: string | null
           insurance_expiry?: string | null
@@ -137,6 +142,7 @@ export type Database = {
           registration_path?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["driver_app_status"]
           street_address?: string | null
           submitted_at?: string | null
@@ -155,6 +161,8 @@ export type Database = {
           consent_terms?: boolean
           created_at?: string
           date_of_birth?: string | null
+          decision_reason?: string | null
+          decision_source?: string
           id?: string
           insurance_company?: string | null
           insurance_expiry?: string | null
@@ -175,6 +183,7 @@ export type Database = {
           registration_path?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["driver_app_status"]
           street_address?: string | null
           submitted_at?: string | null
@@ -304,6 +313,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -320,8 +350,16 @@ export type Database = {
           trips_count: number
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "reviewer" | "user"
       driver_app_status: "draft" | "submitted" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -450,6 +488,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "reviewer", "user"],
       driver_app_status: ["draft", "submitted", "approved", "rejected"],
     },
   },

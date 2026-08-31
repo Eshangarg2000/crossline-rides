@@ -2,8 +2,9 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useServerFn } from "@tanstack/react-start";
+import { submitDriverApplication } from "@/lib/driver.functions";
 import {
   DOCUMENTS,
   PROVINCES,
@@ -66,6 +67,7 @@ const sectionTitle = "font-display font-semibold text-foreground text-xl";
 function BecomeDriver() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const runSubmit = useServerFn(submitDriverApplication);
 
   const [form, setForm] = useState<Form>(EMPTY);
   const [docs, setDocs] = useState<Partial<Record<DocumentKey, string>>>({});
@@ -154,46 +156,26 @@ function BecomeDriver() {
 
     setBusy(true);
     try {
-      const payload = {
-        user_id: user.id,
-        status: "submitted" as const,
-        legal_name: form["legal_name"] || null,
-        date_of_birth: form["date_of_birth"] || null,
-        phone: form["phone"] || null,
-        street_address: form["street_address"] || null,
-        city: form["city"] || null,
-        province: form["province"] || null,
-        postal_code: form["postal_code"] || null,
-        licence_number: form["licence_number"] || null,
-        licence_province: form["licence_province"] || null,
-        licence_class: form["licence_class"] || null,
-        licence_expiry: form["licence_expiry"] || null,
-        vehicle_make: form["vehicle_make"] || null,
-        vehicle_model: form["vehicle_model"] || null,
-        vehicle_year: form["vehicle_year"] ? Number(form["vehicle_year"]) : null,
-        vehicle_colour: form["vehicle_colour"] || null,
-        plate_number: form["plate_number"] || null,
-        plate_province: form["plate_province"] || null,
-        insurance_company: form["insurance_company"] || null,
-        insurance_policy_number: form["insurance_policy_number"] || null,
-        insurance_expiry: form["insurance_expiry"] || null,
-        licence_front_path: docs.licence_front_path ?? null,
-        licence_back_path: docs.licence_back_path ?? null,
-        insurance_path: docs.insurance_path ?? null,
-        registration_path: docs.registration_path ?? null,
-        abstract_path: docs.abstract_path ?? null,
-        consent_background_check: consents.background,
-        consent_terms: consents.terms,
-        consent_accurate: consents.accurate,
-        submitted_at: new Date().toISOString(),
-      };
+      const result = await runSubmit({
+        data: {
+          ...form,
+          vehicle_year: form["vehicle_year"] ? Number(form["vehicle_year"]) : null,
+          licence_front_path: docs.licence_front_path ?? null,
+          licence_back_path: docs.licence_back_path ?? null,
+          insurance_path: docs.insurance_path ?? null,
+          registration_path: docs.registration_path ?? null,
+          abstract_path: docs.abstract_path ?? null,
+          consent_background_check: consents.background,
+          consent_terms: consents.terms,
+          consent_accurate: consents.accurate,
+        },
+      });
 
-      const { error } = await supabase
-        .from("driver_applications")
-        .upsert(payload, { onConflict: "user_id" });
-      if (error) throw error;
+      if (result.status === "approved") toast.success("Approved — you can post rides now");
+      else if (result.status === "rejected")
+        toast.error(result.reason ?? "Your application did not meet the requirements");
+      else toast.success("Submitted — a reviewer will take a look");
 
-      toast.success("Application submitted for review");
       await refetch();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -202,6 +184,7 @@ function BecomeDriver() {
       setBusy(false);
     }
   }
+
 
   const status = (application?.status ?? "draft") as DriverApplication["status"];
   const copy = statusCopy(status);
