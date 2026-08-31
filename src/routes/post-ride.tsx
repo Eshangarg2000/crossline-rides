@@ -136,7 +136,12 @@ function PostRide() {
       toast.success("Ride published");
       navigate({ to: "/rides/$rideId", params: { rideId: data.id } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not publish ride");
+      const message = err instanceof Error ? err.message : "Could not publish ride";
+      toast.error(
+        /row-level security|policy/i.test(message)
+          ? "Only approved drivers with a valid licence and insurance on file can publish a ride."
+          : message,
+      );
     } finally {
       setBusy(false);
     }
