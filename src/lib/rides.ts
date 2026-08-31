@@ -55,7 +55,42 @@ export function dayOf(iso: string) {
   });
 }
 
+const UPPER_TOKENS = new Set([
+  "ON","BC","AB","SK","MB","QC","NB","NS","PE","NL","YT","NT","NU",
+  "NE","NW","SE","SW","GTA","YYZ","YVR","US","USA","UK",
+]);
+
+/** Display-only: normalise inconsistent address casing (e.g. "137 hORNER aVENUE"). */
+export function formatPlace(value?: string | null) {
+  if (!value) return "";
+  return value
+    .split(",")
+    .map((segment) =>
+      segment
+        .trim()
+        .split(/\s+/)
+        .map((word) => {
+          const bare = word.replace(/[^A-Za-z]/g, "");
+          if (bare && UPPER_TOKENS.has(bare.toUpperCase()) && bare.length <= 3) {
+            return word.toUpperCase();
+          }
+          if (/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(word)) return word.toUpperCase();
+          if (/\d/.test(word) && /[A-Za-z]/.test(word) === false) return word;
+          return word
+            .split("-")
+            .map((part) =>
+              part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : part,
+            )
+            .join("-");
+        })
+        .join(" "),
+    )
+    .filter(Boolean)
+    .join(", ");
+}
+
 export function initials(name: string) {
+
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   return (parts[0]![0]! + (parts[1]?.[0] ?? "")).toUpperCase();
