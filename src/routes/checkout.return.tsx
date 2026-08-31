@@ -23,7 +23,7 @@ function CheckoutReturn() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 sm:px-8 py-20 text-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">
+      <p className="text-sm font-medium text-primary-deep">
         {sessionId ? "Payment received" : "Checkout"}
       </p>
       <h1 className="font-display font-semibold text-foreground text-3xl mt-2">

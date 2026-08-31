@@ -141,7 +141,7 @@ function RideDetail() {
           <div className="p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">Ride detail</p>
+                <p className="text-sm font-medium text-primary-deep">Ride detail</p>
                 <h1 className="font-display font-semibold text-foreground text-2xl mt-1.5">
                   {ride.origin} → {ride.destination}
                 </h1>
@@ -168,7 +168,7 @@ function RideDetail() {
                   <div className="flex-1 h-px mx-3 -rotate-6 bg-primary/50" />
                   <div className="flex-1 h-px bg-foreground" />
                 </div>
-                <p className="text-center text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mt-3">
+                <p className="text-center text-xs text-muted-foreground mt-3">
                   Two lanes, one ride
                 </p>
               </div>
@@ -194,7 +194,7 @@ function RideDetail() {
         </div>
 
         <div className="lg:col-span-2 rounded-[22px] ring-1 ring-black/5 bg-card p-5 sm:p-7 h-fit">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">Book &amp; pay</p>
+          <p className="text-sm font-medium text-primary-deep">Book &amp; pay</p>
           <h2 className="font-display font-semibold text-foreground text-2xl mt-1.5">Reserve your seat</h2>
           <p className="text-sm text-muted-foreground mt-2">
             {ride.seats_available} of {ride.seats_total} seats still open.
@@ -217,7 +217,7 @@ function RideDetail() {
             </button>
           )}
 
-          <label htmlFor="booking-seats" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-5 mb-1.5">
+          <label htmlFor="booking-seats" className="block text-sm font-medium text-foreground mt-5 mb-1.5">
             Seats
           </label>
           <input id="booking-seats"

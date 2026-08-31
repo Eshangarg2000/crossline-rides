@@ -82,7 +82,7 @@ function AuthPage() {
 
   return (
     <div className="mx-auto max-w-md px-5 sm:px-8 pt-14 pb-20">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">
+      <p className="text-sm font-medium text-primary-deep">
         {mode === "signin" ? "Welcome back" : "Join the lane"}
       </p>
       <h1 className="font-display font-semibold text-foreground text-3xl mt-2">
@@ -94,13 +94,13 @@ function AuthPage() {
           {mode === "signup" && (
             <>
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Full name
                 </label>
                 <input className={field} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Home city
                 </label>
                 <input
@@ -113,7 +113,7 @@ function AuthPage() {
             </>
           )}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               Email
             </label>
             <input
@@ -125,7 +125,7 @@ function AuthPage() {
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               Password
             </label>
             <input
@@ -146,7 +146,7 @@ function AuthPage() {
           </button>
         </form>
 
-        <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+        <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
           <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
         </div>
 

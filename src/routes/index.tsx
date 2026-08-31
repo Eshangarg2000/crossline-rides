@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { RideRow } from "@/components/RideRow";
+import { PlaceInput } from "@/components/PlaceInput";
 import { CORRIDORS, searchRides } from "@/lib/rides";
 import highway from "@/assets/highway-merge.jpg";
 
@@ -39,13 +40,13 @@ function Home() {
   const field =
     "w-full rounded-[12px] bg-card ring-1 ring-black/5 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-primary";
   const label =
-    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5";
+    "block text-sm font-medium text-foreground mb-1.5";
 
   return (
     <div>
       <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-12 pb-14">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-deep">
+          <p className="text-sm font-medium text-primary-deep">
             Carpool across Canada
           </p>
           <h1 className="font-display font-semibold text-foreground mt-4 text-4xl sm:text-5xl leading-tight max-w-[18ch] text-balance">
@@ -75,21 +76,23 @@ function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-2 items-end">
             <div className="sm:col-span-4">
               <label className={label} htmlFor="home-from">From</label>
-              <input
+              <PlaceInput
                 id="home-from"
                 className={field}
                 value={from}
-                onChange={(e) => setFrom(e.target.value)}
+                onChange={setFrom}
+                onPick={(p) => setFrom(p.address)}
                 placeholder="Toronto, ON"
               />
             </div>
             <div className="sm:col-span-4">
               <label className={label} htmlFor="home-to">To</label>
-              <input
+              <PlaceInput
                 id="home-to"
                 className={field}
                 value={to}
-                onChange={(e) => setTo(e.target.value)}
+                onChange={setTo}
+                onPick={(p) => setTo(p.address)}
                 placeholder="Ottawa, ON"
               />
             </div>
@@ -120,7 +123,7 @@ function Home() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mr-1">
+            <span className="text-sm font-medium text-muted-foreground mr-1">
               Popular corridors
             </span>
             {CORRIDORS.map((c) => (
@@ -180,7 +183,7 @@ function Home() {
               className="w-full aspect-[16/8] object-cover"
             />
             <div className="p-5 sm:p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">How it works</p>
+              <p className="text-sm font-medium text-primary-deep">How it works</p>
               <h3 className="font-display font-semibold text-foreground text-2xl mt-1.5">
                 Two lanes, one ride
               </h3>
@@ -206,7 +209,7 @@ function Home() {
           </div>
 
           <div className="lg:col-span-2 rounded-[22px] ring-1 ring-black/5 bg-card p-5 sm:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">Drive with us</p>
+            <p className="text-sm font-medium text-primary-deep">Drive with us</p>
             <h3 className="font-display font-semibold text-foreground text-2xl mt-1.5">Post a ride</h3>
             <p className="text-sm text-muted-foreground mt-2">
               Add your route points and set a fair price per seat.

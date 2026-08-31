@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,8 @@ import { PlaceInput } from "@/components/PlaceInput";
 import { computeRoute } from "@/lib/maps.functions";
 import { formatDistance, formatDuration, suggestedFare, type PlacePick } from "@/lib/maps";
 import { money } from "@/lib/rides";
+import { getMyDriverApplication, isVerifiedDriver, statusCopy } from "@/lib/driver";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/post-ride")({
   head: () => ({
@@ -55,6 +58,12 @@ function PostRide() {
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
+
+  const { data: application, isLoading: applicationLoading } = useQuery({
+    queryKey: ["driver-application", user?.id],
+    queryFn: getMyDriverApplication,
+    enabled: Boolean(user),
+  });
 
   useEffect(() => {
     if (!originPick || !destinationPick) {
@@ -136,13 +145,52 @@ function PostRide() {
   const field =
     "w-full rounded-[12px] bg-background ring-1 ring-black/5 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-primary";
   const label =
-    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5";
+    "block text-sm font-medium text-foreground mb-1.5";
 
   const suggestion = routeInfo ? suggestedFare(routeInfo.distanceKm) : null;
 
+  if (user && !applicationLoading && !isVerifiedDriver(application)) {
+    const copy = application ? statusCopy(application.status) : null;
+    return (
+      <div className="mx-auto max-w-2xl px-5 sm:px-8 pt-10 pb-20">
+        <p className="text-sm font-medium text-primary-deep">Drive with us</p>
+        <h1 className="font-display font-semibold text-foreground text-3xl mt-2">
+          Get verified before you post
+        </h1>
+        <p className="text-sm text-muted-foreground mt-3 max-w-[60ch]">
+          Like other Canadian ride-share platforms, Crossline verifies every driver: full legal
+          identity, a valid provincial licence, vehicle registration and current auto insurance.
+          It takes about five minutes.
+        </p>
+        <div className="mt-6 rounded-[20px] ring-1 ring-black/5 bg-card p-5 sm:p-6">
+          {copy && (
+            <>
+              <p className="text-sm font-semibold text-foreground">Status: {copy.title}</p>
+              <p className="text-sm text-muted-foreground mt-1">{copy.body}</p>
+            </>
+          )}
+          {!copy && (
+            <ul className="space-y-2 text-sm text-foreground">
+              <li>· Driver's licence (front and back)</li>
+              <li>· Vehicle registration / ownership</li>
+              <li>· Proof of insurance (pink slip)</li>
+              <li>· Driver's abstract, if you have one</li>
+            </ul>
+          )}
+          <Link
+            to="/become-driver"
+            className="inline-block mt-5 rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold px-5 py-3"
+          >
+            {application ? "View my application" : "Start driver verification"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-5 sm:px-8 pt-10 pb-16">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">Drive with us</p>
+      <p className="text-sm font-medium text-primary-deep">Drive with us</p>
       <h1 className="font-display font-semibold text-foreground text-3xl mt-2">Post a ride</h1>
       <p className="text-sm text-muted-foreground mt-2">
         Start typing an address and pick it from the list — Crossline measures the real driving
