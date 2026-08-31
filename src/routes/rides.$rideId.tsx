@@ -3,7 +3,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { dayOf, getRide, money, timeOf } from "@/lib/rides";
+import { formatPlace, dayOf, getRide, money, timeOf } from "@/lib/rides";
 import { quoteBooking } from "@/lib/fees";
 import { RideCheckout } from "@/components/RideCheckout";
 import highway from "@/assets/highway-merge.jpg";
@@ -95,10 +95,10 @@ function RideDetail() {
   const durationLabel = formatDuration(route?.durationMin ?? ride.duration_min ?? null);
 
   const stops = [
-    { label: `${timeOf(ride.depart_at)} — ${ride.origin}`, tone: "start" as const },
+    { label: `${timeOf(ride.depart_at)} — ${formatPlace(ride.origin)}`, tone: "start" as const },
     ...ride.stops.map((s) => ({ label: s, tone: "mid" as const })),
     {
-      label: `${ride.arrive_at ? `${timeOf(ride.arrive_at)} — ` : ""}${ride.destination}`,
+      label: `${ride.arrive_at ? `${timeOf(ride.arrive_at)} — ` : ""}${formatPlace(ride.destination)}`,
       tone: "end" as const,
     },
   ];
@@ -143,7 +143,7 @@ function RideDetail() {
               <div>
                 <p className="text-sm font-medium text-primary-deep">Ride detail</p>
                 <h1 className="font-display font-semibold text-foreground text-2xl mt-1.5">
-                  {ride.origin} → {ride.destination}
+                  {formatPlace(ride.origin)} → {formatPlace(ride.destination)}
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
                   {ride.driver?.full_name ?? "Driver"} · {ride.driver?.rating?.toFixed(1) ?? "5.0"}
@@ -207,7 +207,7 @@ function RideDetail() {
               className="mt-4 w-full rounded-[14px] bg-background ring-1 ring-line px-4 py-3 text-left"
             >
               <span className="block text-sm font-medium text-foreground">
-                {ride.origin} → {ride.destination}
+                {formatPlace(ride.origin)} → {formatPlace(ride.destination)}
               </span>
               <span className="block text-xs text-muted-foreground mt-0.5">
                 {[distanceLabel, durationLabel && `${durationLabel} drive`, "view route on map"]
@@ -298,7 +298,7 @@ function RideDetail() {
             <div className="flex items-center justify-between gap-4 px-5 py-4">
               <div>
                 <p className="font-display font-semibold text-foreground">
-                  {ride.origin} → {ride.destination}
+                  {formatPlace(ride.origin)} → {formatPlace(ride.destination)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {[distanceLabel, durationLabel && `${durationLabel} drive`]

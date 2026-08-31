@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { dayOf, money, timeOf, type Ride } from "@/lib/rides";
+import { formatPlace, dayOf, money, timeOf, type Ride } from "@/lib/rides";
 
 export const Route = createFileRoute("/my-trips")({
   head: () => ({
@@ -75,7 +75,7 @@ function MyTrips() {
           <div key={b.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 flex items-center gap-4">
             <div className="flex-1 min-w-0">
               <p className="font-medium text-foreground">
-                {b.rides?.origin} → {b.rides?.destination}
+                {formatPlace(b.rides?.origin)} → {formatPlace(b.rides?.destination)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {b.rides ? `${dayOf(b.rides.depart_at)} · ${timeOf(b.rides.depart_at)} · ` : ""}
@@ -110,7 +110,7 @@ function MyTrips() {
           <div key={r.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 flex items-center gap-4">
             <div className="flex-1 min-w-0">
               <p className="font-medium text-foreground">
-                {r.origin} → {r.destination}
+                {formatPlace(r.origin)} → {formatPlace(r.destination)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {dayOf(r.depart_at)} · {timeOf(r.depart_at)} · {r.seats_available}/{r.seats_total} seats open
