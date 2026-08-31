@@ -14,7 +14,15 @@ export type Ride = {
   car: string | null;
   notes: string | null;
   status: string;
+  origin_lat?: number | null;
+  origin_lng?: number | null;
+  destination_lat?: number | null;
+  destination_lng?: number | null;
+  distance_km?: number | string | null;
+  duration_min?: number | null;
+  route_polyline?: string | null;
 };
+
 
 export type RideWithDriver = Ride & {
   driver: { full_name: string; rating: number; trips_count: number; city: string | null } | null;
