@@ -136,13 +136,13 @@ function PostRide() {
   const field =
     "w-full rounded-[12px] bg-background ring-1 ring-black/5 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-primary";
   const label =
-    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5";
+    "block text-sm font-medium text-foreground mb-1.5";
 
   const suggestion = routeInfo ? suggestedFare(routeInfo.distanceKm) : null;
 
   return (
     <div className="mx-auto max-w-2xl px-5 sm:px-8 pt-10 pb-16">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-deep">Drive with us</p>
+      <p className="text-sm font-medium text-primary-deep">Drive with us</p>
       <h1 className="font-display font-semibold text-foreground text-3xl mt-2">Post a ride</h1>
       <p className="text-sm text-muted-foreground mt-2">
         Start typing an address and pick it from the list — Crossline measures the real driving

@@ -57,7 +57,7 @@ function RidesPage() {
   const field =
     "w-full rounded-[12px] bg-card ring-1 ring-black/5 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-primary";
   const label =
-    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5";
+    "block text-sm font-medium text-foreground mb-1.5";
 
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 pb-16">
@@ -113,7 +113,7 @@ function RidesPage() {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mr-1">
+          <span className="text-sm font-medium text-muted-foreground mr-1">
             Popular corridors
           </span>
           {CORRIDORS.map((c) => (
