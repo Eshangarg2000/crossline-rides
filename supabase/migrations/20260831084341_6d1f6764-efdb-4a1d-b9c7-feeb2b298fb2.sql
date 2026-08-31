@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.prevent_ride_delete_with_bookings() FROM PUBLIC, anon, authenticated;

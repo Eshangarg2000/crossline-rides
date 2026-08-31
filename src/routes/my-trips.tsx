@@ -1,9 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatPlace, dayOf, money, timeOf, type Ride } from "@/lib/rides";
+import { cancelMyBooking, cancelMyRide } from "@/lib/booking.functions";
+import { quoteRefund } from "@/lib/cancellation";
 
 export const Route = createFileRoute("/my-trips")({
   head: () => ({
@@ -24,26 +28,62 @@ type BookingRow = {
   id: string;
   seats: number;
   total_amount: number;
+  service_fee: number;
+  tax_amount: number;
+  refund_amount: number;
   payment_status: string;
   status: string;
   rides: Ride | null;
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  pending_payment: "Awaiting payment",
+  confirmed: "Confirmed",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  expired: "Seat hold expired",
+};
+
+function StatusPill({ status }: { status: string }) {
+  const tone =
+    status === "confirmed" || status === "completed"
+      ? "bg-primary/10 text-primary-deep"
+      : status === "pending_payment"
+        ? "bg-amber-500/10 text-amber-700"
+        : "bg-muted text-muted-foreground";
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${tone}`}>
+      {STATUS_LABEL[status] ?? status}
+    </span>
+  );
+}
+
 function MyTrips() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const runCancelBooking = useServerFn(cancelMyBooking);
+  const runCancelRide = useServerFn(cancelMyRide);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
 
-  const { data: bookings } = useQuery({
+  const {
+    data: bookings,
+    isLoading: bookingsLoading,
+    isError: bookingsError,
+    refetch: refetchBookings,
+  } = useQuery({
     queryKey: ["my-bookings", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id, seats, total_amount, payment_status, status, rides(*)")
+        .select(
+          "id, seats, total_amount, service_fee, tax_amount, refund_amount, payment_status, status, rides(*)",
+        )
         .eq("rider_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -51,7 +91,11 @@ function MyTrips() {
     },
   });
 
-  const { data: driving } = useQuery({
+  const {
+    data: driving,
+    isLoading: drivingLoading,
+    isError: drivingError,
+  } = useQuery({
     queryKey: ["my-rides", user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -65,35 +109,126 @@ function MyTrips() {
     },
   });
 
+  async function onCancelBooking(b: BookingRow) {
+    const quote = quoteRefund({
+      totalAmount: Number(b.total_amount),
+      serviceFee: Number(b.service_fee),
+      taxAmount: Number(b.tax_amount ?? 0),
+      departAt: b.rides?.depart_at ?? new Date().toISOString(),
+      paid: b.payment_status === "paid",
+    });
+    const confirmed = window.confirm(
+      `Cancel this booking?\n\n${quote.label}\nEstimated refund: ${money(quote.amount)}\n\nThe final amount is confirmed by Crossline when the cancellation is processed.`,
+    );
+    if (!confirmed) return;
+    setBusyId(b.id);
+    try {
+      const result = await runCancelBooking({ data: { bookingId: b.id } });
+      if (!result.ok) throw new Error(result.error);
+      toast.success(
+        result.refunded > 0
+          ? `Booking cancelled — ${money(result.refunded)} refunded.`
+          : "Booking cancelled.",
+      );
+      await queryClient.invalidateQueries({ queryKey: ["my-bookings", user?.id] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not cancel this booking");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function onCancelRide(r: Ride) {
+    const confirmed = window.confirm(
+      "Cancel this ride?\n\nEvery rider who booked will be fully refunded and notified. The ride stays on your record as cancelled — it is not deleted.",
+    );
+    if (!confirmed) return;
+    setBusyId(r.id);
+    try {
+      const result = await runCancelRide({ data: { rideId: r.id, reason: "" } });
+      if (!result.ok) throw new Error(result.error);
+      toast.success(
+        result.cancelledBookings > 0
+          ? `Ride cancelled — ${result.cancelledBookings} booking(s) refunded.`
+          : "Ride cancelled.",
+      );
+      await queryClient.invalidateQueries({ queryKey: ["my-rides", user?.id] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not cancel this ride");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-5 sm:px-8 pt-10 pb-16">
       <h1 className="font-display font-semibold text-foreground text-3xl">My trips</h1>
 
-      <h2 className="font-display font-semibold text-foreground text-xl mt-8 mb-4">Seats you booked</h2>
+      <h2 className="font-display font-semibold text-foreground text-xl mt-8 mb-4">
+        Seats you booked
+      </h2>
       <div className="space-y-3">
-        {bookings?.map((b) => (
-          <div key={b.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground">
-                {formatPlace(b.rides?.origin)} → {formatPlace(b.rides?.destination)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {b.rides ? `${dayOf(b.rides.depart_at)} · ${timeOf(b.rides.depart_at)} · ` : ""}
-                {b.seats} seat{b.seats === 1 ? "" : "s"} · {b.payment_status === "paid" ? "paid in app" : b.payment_status}
-              </p>
-            </div>
-            <span className="font-display font-semibold text-foreground">{money(Number(b.total_amount))}</span>
-            {b.rides && (
-              <Link
-                to="/rides/$rideId"
-                params={{ rideId: b.rides.id }}
-                className="text-sm text-primary-deep font-medium"
-              >
-                View
-              </Link>
-            )}
+        {bookingsLoading && (
+          <div className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 text-sm text-muted-foreground">
+            Loading your bookings…
           </div>
-        ))}
+        )}
+        {bookingsError && (
+          <div className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 text-sm">
+            <p className="text-foreground">We couldn't load your bookings.</p>
+            <button
+              type="button"
+              onClick={() => refetchBookings()}
+              className="mt-2 text-primary-deep font-medium"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        {bookings?.map((b) => {
+          const cancellable = b.status === "pending_payment" || b.status === "confirmed";
+          return (
+            <div key={b.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex-1 min-w-[200px]">
+                  <p className="font-medium text-foreground">
+                    {formatPlace(b.rides?.origin)} → {formatPlace(b.rides?.destination)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {b.rides ? `${dayOf(b.rides.depart_at)} · ${timeOf(b.rides.depart_at)} · ` : ""}
+                    {b.seats} seat{b.seats === 1 ? "" : "s"}
+                    {Number(b.refund_amount) > 0
+                      ? ` · ${money(Number(b.refund_amount))} refunded`
+                      : ""}
+                  </p>
+                </div>
+                <StatusPill status={b.status} />
+                <span className="font-display font-semibold text-foreground">
+                  {money(Number(b.total_amount))}
+                </span>
+                {b.rides && (
+                  <Link
+                    to="/rides/$rideId"
+                    params={{ rideId: b.rides.id }}
+                    className="text-sm text-primary-deep font-medium"
+                  >
+                    View
+                  </Link>
+                )}
+                {cancellable && (
+                  <button
+                    type="button"
+                    disabled={busyId === b.id}
+                    onClick={() => onCancelBooking(b)}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  >
+                    {busyId === b.id ? "Cancelling…" : "Cancel"}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
         {bookings?.length === 0 && (
           <p className="text-sm text-muted-foreground">
             No bookings yet.{" "}
@@ -104,24 +239,52 @@ function MyTrips() {
         )}
       </div>
 
-      <h2 className="font-display font-semibold text-foreground text-xl mt-10 mb-4">Rides you're driving</h2>
+      <h2 className="font-display font-semibold text-foreground text-xl mt-10 mb-4">
+        Rides you're driving
+      </h2>
       <div className="space-y-3">
+        {drivingLoading && (
+          <div className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 text-sm text-muted-foreground">
+            Loading your rides…
+          </div>
+        )}
+        {drivingError && (
+          <p className="text-sm text-muted-foreground">We couldn't load your rides right now.</p>
+        )}
         {driving?.map((r) => (
-          <div key={r.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground">
-                {formatPlace(r.origin)} → {formatPlace(r.destination)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {dayOf(r.depart_at)} · {timeOf(r.depart_at)} · {r.seats_available}/{r.seats_total} seats open
-              </p>
+          <div key={r.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="flex-1 min-w-[200px]">
+                <p className="font-medium text-foreground">
+                  {formatPlace(r.origin)} → {formatPlace(r.destination)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {dayOf(r.depart_at)} · {timeOf(r.depart_at)} · {r.seats_available}/{r.seats_total}{" "}
+                  seats open
+                  {r.status !== "published" ? ` · ${r.status}` : ""}
+                </p>
+              </div>
+              <span className="font-display font-semibold text-foreground">
+                {money(Number(r.price_per_seat))}
+              </span>
+              <Link
+                to="/rides/$rideId"
+                params={{ rideId: r.id }}
+                className="text-sm text-primary-deep font-medium"
+              >
+                View
+              </Link>
+              {r.status === "published" && (
+                <button
+                  type="button"
+                  disabled={busyId === r.id}
+                  onClick={() => onCancelRide(r)}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+                >
+                  {busyId === r.id ? "Cancelling…" : "Cancel ride"}
+                </button>
+              )}
             </div>
-            <span className="font-display font-semibold text-foreground">
-              {money(Number(r.price_per_seat))}
-            </span>
-            <Link to="/rides/$rideId" params={{ rideId: r.id }} className="text-sm text-primary-deep font-medium">
-              View
-            </Link>
           </div>
         ))}
         {driving?.length === 0 && (

@@ -69,6 +69,9 @@ function RideDetail() {
   const price = Number(ride.price_per_seat);
   const quote = quoteBooking(price, seats);
   const isOwnRide = user?.id === ride.driver_id;
+  const isCancelled = ride.status === "cancelled";
+  const hasDeparted = new Date(ride.depart_at).getTime() <= Date.now();
+  const isBookable = ride.status === "published" && !hasDeparted;
 
   function startCheckout() {
     if (!user) {
@@ -265,20 +268,24 @@ function RideDetail() {
           ) : (
             <button
               onClick={startCheckout}
-              disabled={ride.seats_available < 1 || isOwnRide}
+              disabled={!isBookable || ride.seats_available < 1 || isOwnRide}
               className="mt-5 w-full rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold py-3 disabled:opacity-60"
             >
-              {isOwnRide
-                ? "This is your ride"
-                : ride.seats_available < 1
-                  ? "Fully booked"
-                  : `Book ${seats} seat${seats === 1 ? "" : "s"} · ${money(quote.total)}`}
+              {isCancelled
+                ? "This ride was cancelled"
+                : hasDeparted
+                  ? "This ride has already departed"
+                  : isOwnRide
+                    ? "This is your ride"
+                    : ride.seats_available < 1
+                      ? "Fully booked"
+                      : `Book ${seats} seat${seats === 1 ? "" : "s"} · ${money(quote.total)}`}
             </button>
           )}
           <p className="mt-3 text-xs text-muted-foreground">
-            Free cancellation up to 24h before departure · fares in CAD. Your card is charged
-            securely at checkout; the driver is paid out the fare and Crossline keeps the service
-            fee.
+            Your seat is held for 30 minutes while you pay, and released automatically if checkout
+            isn't completed. Full refund up to 24h before departure, seat fare only within 24h, and
+            no refund inside 2h. Fares in CAD; Crossline keeps the service fee.
           </p>
         </div>
       </div>

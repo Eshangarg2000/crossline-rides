@@ -1,5 +1,5 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createRideCheckoutSession } from "@/lib/payments.functions";
 
 export function RideCheckout({
@@ -12,9 +12,7 @@ export function RideCheckout({
   returnUrl: string;
 }) {
   const fetchClientSecret = async (): Promise<string> => {
-    const result = await createRideCheckoutSession({
-      data: { rideId, seats, returnUrl, environment: getStripeEnvironment() },
-    });
+    const result = await createRideCheckoutSession({ data: { rideId, seats, returnUrl } });
     if ("error" in result) throw new Error(result.error);
     if (!result.clientSecret) throw new Error("Checkout could not be started");
     return result.clientSecret;
