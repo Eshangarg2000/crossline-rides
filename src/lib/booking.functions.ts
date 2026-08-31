@@ -53,7 +53,7 @@ export const cancelMyRide = createServerFn({ method: "POST" })
 /** Releases abandoned seat holds and closes out rides that have already run. */
 export const runRideMaintenance = createServerFn({ method: "POST" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  await supabaseAdmin.rpc("expire_stale_holds", { _ride_id: null });
+  await supabaseAdmin.rpc("expire_stale_holds", {});
   await supabaseAdmin.rpc("complete_due_rides");
   return { ok: true };
 });
