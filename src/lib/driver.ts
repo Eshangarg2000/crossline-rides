@@ -105,7 +105,7 @@ export async function uploadDriverDocument(userId: string, key: DocumentKey, fil
   const path = `${userId}/${key}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from("driver-docs").upload(path, file, {
     upsert: true,
-    contentType: file.type || undefined,
+    ...(file.type ? { contentType: file.type } : {}),
   });
   if (error) throw error;
   return path;
