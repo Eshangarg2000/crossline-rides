@@ -217,7 +217,7 @@ function RideDetail() {
             </button>
           )}
 
-          <label htmlFor="booking-seats" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-5 mb-1.5">
+          <label htmlFor="booking-seats" className="block text-sm font-medium text-foreground mt-5 mb-1.5">
             Seats
           </label>
           <input id="booking-seats"
