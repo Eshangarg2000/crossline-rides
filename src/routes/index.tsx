@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { RideRow } from "@/components/RideRow";
+import { PlaceInput } from "@/components/PlaceInput";
 import { CORRIDORS, searchRides } from "@/lib/rides";
 import highway from "@/assets/highway-merge.jpg";
 
@@ -75,21 +76,23 @@ function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-2 items-end">
             <div className="sm:col-span-4">
               <label className={label} htmlFor="home-from">From</label>
-              <input
+              <PlaceInput
                 id="home-from"
                 className={field}
                 value={from}
-                onChange={(e) => setFrom(e.target.value)}
+                onChange={setFrom}
+                onPick={(p) => setFrom(p.address)}
                 placeholder="Toronto, ON"
               />
             </div>
             <div className="sm:col-span-4">
               <label className={label} htmlFor="home-to">To</label>
-              <input
+              <PlaceInput
                 id="home-to"
                 className={field}
                 value={to}
-                onChange={(e) => setTo(e.target.value)}
+                onChange={setTo}
+                onPick={(p) => setTo(p.address)}
                 placeholder="Ottawa, ON"
               />
             </div>
