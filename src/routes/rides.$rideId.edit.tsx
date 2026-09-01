@@ -9,6 +9,7 @@ import { PlaceInput } from "@/components/PlaceInput";
 import { computeRoute } from "@/lib/maps.functions";
 import { formatDistance, formatDuration, type PlacePick } from "@/lib/maps";
 import { formatPlace, getRide } from "@/lib/rides";
+import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/rides/$rideId/edit")({
   head: () => ({
