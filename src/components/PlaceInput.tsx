@@ -10,6 +10,7 @@ export function PlaceInput({
   onPick,
   placeholder,
   required,
+  disabled,
   className,
 }: {
   id: string;
@@ -18,6 +19,7 @@ export function PlaceInput({
   onPick: (place: PlacePick) => void;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
   className?: string;
 }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -112,6 +114,7 @@ export function PlaceInput({
         onFocus={() => suggestions.length > 0 && setOpen(true)}
         placeholder={placeholder}
         required={required}
+        disabled={disabled}
         autoComplete="off"
         role="combobox"
         aria-expanded={open}

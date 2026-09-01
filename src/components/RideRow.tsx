@@ -6,9 +6,10 @@ import { formatDistance, formatDuration } from "@/lib/maps";
 function pickupLabel(ride: RideWithDriver) {
   switch (ride.pickup_flexibility) {
     case "flexible":
+      // Driver preference only — Crossline does not calculate a rider-specific detour yet.
       return ride.max_detour_min
-        ? `Flexible pickup · up to ${ride.max_detour_min} min detour`
-        : "Flexible pickup near you";
+        ? `Driver willing to detour up to ${ride.max_detour_min} min`
+        : "Driver willing to detour for pickup";
     case "meeting_point":
       return "Meeting point pickup";
     default:
