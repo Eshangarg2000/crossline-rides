@@ -85,6 +85,8 @@ export function formatPlace(value?: string | null) {
             return word.toUpperCase();
           }
           if (/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(word)) return word.toUpperCase();
+          // Postal codes are often split across two words ("L5B" + "2C9").
+          if (/^([A-Za-z]\d[A-Za-z]|\d[A-Za-z]\d)$/.test(word)) return word.toUpperCase();
           if (/\d/.test(word) && /[A-Za-z]/.test(word) === false) return word;
           return word
             .split("-")
