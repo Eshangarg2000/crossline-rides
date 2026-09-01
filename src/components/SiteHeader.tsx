@@ -19,11 +19,11 @@ export function SiteHeader() {
 
   const links = [
     { to: "/rides", label: "Find a ride" },
-    { to: "/post-ride", label: "Post a ride" },
     { to: "/my-trips", label: "My trips" },
-    { to: "/become-driver", label: "Become a driver" },
+    { to: "/become-driver", label: "Drive" },
     ...(access?.isReviewer ? [{ to: "/admin/drivers", label: "Reviews" }] : []),
   ] as const;
+
 
   return (
     <header className="mx-auto max-w-6xl px-5 sm:px-8 pt-6">
@@ -62,11 +62,13 @@ export function SiteHeader() {
             </Link>
           )}
           <Link
-            to="/post-ride"
+            to="/rides"
+            search={{}}
             className="hidden sm:inline text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-deep rounded-lg px-4 py-2"
           >
-            Post a ride
+            Find a ride
           </Link>
+
           <button
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
