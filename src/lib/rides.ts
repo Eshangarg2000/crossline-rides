@@ -29,7 +29,13 @@ export type Ride = {
 
 
 export type RideWithDriver = Ride & {
-  driver: { full_name: string; rating: number; trips_count: number; city: string | null } | null;
+  driver: {
+    full_name: string;
+    rating: number;
+    trips_count: number;
+    city: string | null;
+    avatar_url: string | null;
+  } | null;
 };
 
 export const CORRIDORS = [
@@ -79,6 +85,8 @@ export function formatPlace(value?: string | null) {
             return word.toUpperCase();
           }
           if (/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(word)) return word.toUpperCase();
+          // Postal codes are often split across two words ("L5B" + "2C9").
+          if (/^([A-Za-z]\d[A-Za-z]|\d[A-Za-z]\d)$/.test(word)) return word.toUpperCase();
           if (/\d/.test(word) && /[A-Za-z]/.test(word) === false) return word;
           return word
             .split("-")
@@ -110,6 +118,7 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
     rating: number | string | null;
     trips_count: number | null;
     city: string | null;
+    avatar_url: string | null;
   }>;
 
   const map = new Map(profiles.map((p) => [p.id, p]));
@@ -123,6 +132,7 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
             rating: Number(p.rating),
             trips_count: p.trips_count ?? 0,
             city: p.city,
+            avatar_url: p.avatar_url ?? null,
           }
         : null,
     };
