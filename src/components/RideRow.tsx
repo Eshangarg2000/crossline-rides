@@ -1,78 +1,89 @@
 import { Link } from "@tanstack/react-router";
+import { BadgeCheck, Clock, MapPin, Star } from "lucide-react";
 import { formatPlace, dayOf, initials, money, timeOf, type RideWithDriver } from "@/lib/rides";
 import { formatDistance, formatDuration } from "@/lib/maps";
 
+function pickupLabel(ride: RideWithDriver) {
+  switch (ride.pickup_flexibility) {
+    case "flexible":
+      return ride.max_detour_min
+        ? `Flexible pickup · up to ${ride.max_detour_min} min detour`
+        : "Flexible pickup near you";
+    case "meeting_point":
+      return "Meeting point pickup";
+    default:
+      return "Pickup along the driver's route";
+  }
+}
+
+/** Search result: driver, trust, timing, pickup convenience, price. */
 export function RideRow({ ride }: { ride: RideWithDriver }) {
   const name = ride.driver?.full_name || "Driver";
-  const routeLabel = [
-    ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null,
-    ride.duration_min != null ? `${formatDuration(ride.duration_min)} drive` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const isProvider = ride.ride_kind === "commercial";
 
   return (
-    <div className="rounded-[18px] ring-1 ring-black/5 bg-card overflow-hidden">
-      <div className="p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="size-12 rounded-[10px] bg-sun grid place-items-center font-display font-semibold text-foreground">
-              {initials(name)}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{name}</p>
-              <p className="text-xs text-muted-foreground">
-                {ride.driver?.rating?.toFixed(1) ?? "5.0"} · {ride.driver?.trips_count ?? 0} trips
-                {ride.car ? ` · ${ride.car}` : ""}
-              </p>
-            </div>
+    <Link
+      to="/rides/$rideId"
+      params={{ rideId: ride.id }}
+      className="block rounded-[18px] bg-card ring-1 ring-black/5 p-4 sm:p-5 hover:ring-primary/40 transition"
+    >
+      <div className="flex items-start gap-3">
+        <div className="size-11 rounded-full bg-sun grid place-items-center font-semibold text-sm text-foreground shrink-0">
+          {initials(name)}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[15px] font-semibold text-foreground">{name}</span>
+            <span className="inline-flex items-center gap-1 text-xs text-primary-deep font-medium">
+              <BadgeCheck className="size-3.5" /> Verified
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Star className="size-3.5" /> {ride.driver?.rating?.toFixed(1) ?? "5.0"}
+            </span>
+            {isProvider && (
+              <span className="text-[11px] font-medium rounded-full bg-sun px-2 py-0.5 text-foreground">
+                Transport provider
+              </span>
+            )}
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-4 text-sm font-medium text-foreground">
-              <span className="truncate">
-                {timeOf(ride.depart_at)} · {formatPlace(ride.origin)}
-              </span>
-              <span className="truncate text-right">
-                {ride.arrive_at ? `${timeOf(ride.arrive_at)} · ` : ""}
-                {formatPlace(ride.destination)}
-              </span>
-            </div>
-            <div className="relative my-3 h-px route-line">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 size-2.5 rounded-full bg-primary" />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-2.5 rounded-full bg-foreground/40" />
-              <span className="absolute right-0 top-1/2 -translate-y-1/2 size-2.5 rounded-full bg-foreground" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {dayOf(ride.depart_at)}
-              {routeLabel ? ` · ${routeLabel}` : ""}
-              {ride.stops.length > 0
-                ? ` · stops: ${ride.stops.join(" → ")}`
-                : " · direct, no stops"}
+          <p className="mt-1.5 text-[15px] font-medium text-foreground truncate">
+            {formatPlace(ride.origin)} → {formatPlace(ride.destination)}
+          </p>
+
+          <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <p className="flex items-center gap-1.5">
+              <Clock className="size-3.5 shrink-0" />
+              Leaves {timeOf(ride.depart_at)} · {dayOf(ride.depart_at)}
+              {ride.arrive_at ? ` · arrives ${timeOf(ride.arrive_at)}` : ""}
             </p>
-
-          </div>
-
-          <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">
-            <div className="text-right">
-              <p className="font-display font-semibold text-foreground text-2xl leading-none">
-                {money(Number(ride.price_per_seat))}
-                <span className="text-sm text-muted-foreground font-sans font-medium">/seat</span>
-              </p>
-              <p className="text-xs text-primary-deep mt-1 font-medium">
-                {ride.seats_available} seat{ride.seats_available === 1 ? "" : "s"} left
-              </p>
-            </div>
-            <Link
-              to="/rides/$rideId"
-              params={{ rideId: ride.id }}
-              className="text-sm font-medium text-foreground bg-background rounded-lg px-3.5 py-2 ring-1 ring-line"
-            >
-              View &amp; book
-            </Link>
+            <p className="flex items-center gap-1.5">
+              <MapPin className="size-3.5 shrink-0" />
+              {pickupLabel(ride)}
+            </p>
+            <p className="text-xs">
+              {[
+                ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null,
+                ride.duration_min != null ? `${formatDuration(ride.duration_min)} drive` : null,
+                ride.stops.length > 0 ? `${ride.stops.length} stop${ride.stops.length === 1 ? "" : "s"}` : "Direct",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           </div>
         </div>
+
+        <div className="text-right shrink-0">
+          <p className="font-display font-semibold text-foreground text-xl leading-none">
+            {money(Number(ride.price_per_seat))}
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-1">per seat</p>
+          <p className="text-xs text-primary-deep mt-2 font-medium">
+            {ride.seats_available} seat{ride.seats_available === 1 ? "" : "s"} left
+          </p>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
