@@ -21,7 +21,11 @@ export type Ride = {
   distance_km?: number | string | null;
   duration_min?: number | null;
   route_polyline?: string | null;
+  ride_kind?: string | null;
+  pickup_flexibility?: string | null;
+  max_detour_min?: number | null;
 };
+
 
 
 export type RideWithDriver = Ride & {
