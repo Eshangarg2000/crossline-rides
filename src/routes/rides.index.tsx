@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { RideRow } from "@/components/RideRow";
-import { PlaceInput } from "@/components/PlaceInput";
-import { CORRIDORS, searchRides } from "@/lib/rides";
+import { RideSearchPanel } from "@/components/RideSearchPanel";
+import { searchRides } from "@/lib/rides";
+
 
 type Search = {
   from?: string | undefined;
