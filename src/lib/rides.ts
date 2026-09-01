@@ -129,11 +129,30 @@ async function attachDrivers(rides: Ride[]): Promise<RideWithDriver[]> {
   });
 }
 
+export type GeoBounds = { minLat: number; maxLat: number; minLng: number; maxLng: number };
+
+/** Coarse box around the rider's points, used to pre-filter rides server-side. */
+export function boundsAround(points: Array<{ lat: number; lng: number }>, padDeg = 3): GeoBounds | null {
+  if (points.length === 0) return null;
+  const lats = points.map((p) => p.lat);
+  const lngs = points.map((p) => p.lng);
+  return {
+    minLat: Math.min(...lats) - padDeg,
+    maxLat: Math.max(...lats) + padDeg,
+    minLng: Math.min(...lngs) - padDeg,
+    maxLng: Math.max(...lngs) + padDeg,
+  };
+}
+
 export async function searchRides(params: {
   from?: string | undefined;
   to?: string | undefined;
   date?: string | undefined;
   seats?: number | undefined;
+  /** Only return rides that carry a stored driving path (route-intelligent search). */
+  requireGeometry?: boolean | undefined;
+  /** Coarse geographic pre-filter so the row cap doesn't discard relevant rides. */
+  near?: GeoBounds | null | undefined;
 }) {
   let query = supabase
     .from("rides")
@@ -141,11 +160,27 @@ export async function searchRides(params: {
     .eq("status", "published")
     .gte("depart_at", new Date().toISOString())
     .order("depart_at", { ascending: true })
-    .limit(50);
+    .limit(params.requireGeometry ? 200 : 50);
 
   if (params.from) query = query.ilike("origin", `%${params.from}%`);
   if (params.to) query = query.ilike("destination", `%${params.to}%`);
   if (params.seats) query = query.gte("seats_available", params.seats);
+  if (params.requireGeometry) {
+    query = query
+      .not("route_polyline", "is", null)
+      .not("origin_lat", "is", null)
+      .not("destination_lat", "is", null)
+      .not("distance_km", "is", null)
+      .not("duration_min", "is", null);
+  }
+  if (params.near) {
+    // Either end of the driver's trip inside the padded box keeps the ride in play.
+    query = query
+      .gte("origin_lat", params.near.minLat - 2)
+      .lte("origin_lat", params.near.maxLat + 2)
+      .gte("origin_lng", params.near.minLng - 2)
+      .lte("origin_lng", params.near.maxLng + 2);
+  }
   if (params.date) {
     const start = new Date(`${params.date}T00:00:00`);
     const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
