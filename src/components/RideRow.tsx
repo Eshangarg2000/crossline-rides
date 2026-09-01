@@ -1,12 +1,23 @@
 import { Link } from "@tanstack/react-router";
 import { BadgeCheck, Clock, MapPin, Star } from "lucide-react";
 import { formatPlace, dayOf, initials, money, timeOf, type RideWithDriver } from "@/lib/rides";
-import { formatDistance, formatDuration } from "@/lib/maps";
 
-function pickupLabel(ride: RideWithDriver) {
+export type RiderSearch = {
+  fromLat?: number | undefined;
+  fromLng?: number | undefined;
+  toLat?: number | undefined;
+  toLng?: number | undefined;
+};
+
+export function nearLabel(km: number) {
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+}
+
+/** Honest pickup wording. The backend stores the driver's stated preference —
+    Crossline does not calculate a rider-specific detour, so we never imply one. */
+export function pickupLabel(ride: RideWithDriver) {
   switch (ride.pickup_flexibility) {
     case "flexible":
-      // Driver preference only — Crossline does not calculate a rider-specific detour yet.
       return ride.max_detour_min
         ? `Driver willing to detour up to ${ride.max_detour_min} min`
         : "Driver willing to detour for pickup";
@@ -17,15 +28,17 @@ function pickupLabel(ride: RideWithDriver) {
   }
 }
 
-/** Search result: driver, trust, timing, pickup convenience, price. */
+/** Search result: who, when, how convenient, how much. */
 export function RideRow({
   ride,
   pickupKm,
   dropoffKm,
+  riderSearch,
 }: {
   ride: RideWithDriver;
   pickupKm?: number | null;
   dropoffKm?: number | null;
+  riderSearch?: RiderSearch;
 }) {
   const name = ride.driver?.full_name || "Driver";
   const isProvider = ride.ride_kind === "commercial";
@@ -34,12 +47,24 @@ export function RideRow({
     <Link
       to="/rides/$rideId"
       params={{ rideId: ride.id }}
+      search={riderSearch ?? {}}
       className="block rounded-[18px] bg-card ring-1 ring-black/5 p-4 sm:p-5 hover:ring-primary/40 transition"
     >
       <div className="flex items-start gap-3">
-        <div className="size-11 rounded-full bg-sun grid place-items-center font-semibold text-sm text-foreground shrink-0">
-          {initials(name)}
-        </div>
+        {ride.driver?.avatar_url ? (
+          <img
+            src={ride.driver.avatar_url}
+            alt=""
+            width={44}
+            height={44}
+            loading="lazy"
+            className="size-11 rounded-full object-cover shrink-0"
+          />
+        ) : (
+          <div className="size-11 rounded-full bg-sun grid place-items-center font-semibold text-sm text-foreground shrink-0">
+            {initials(name)}
+          </div>
+        )}
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -50,12 +75,11 @@ export function RideRow({
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="size-3.5" /> {ride.driver?.rating?.toFixed(1) ?? "5.0"}
             </span>
-            {isProvider && (
-              <span className="text-[11px] font-medium rounded-full bg-sun px-2 py-0.5 text-foreground">
-                Transport provider
-              </span>
-            )}
           </div>
+
+          <span className="mt-1.5 inline-block text-[11px] font-medium rounded-full bg-background ring-1 ring-line px-2 py-0.5 text-muted-foreground">
+            {isProvider ? "Transportation provider" : "Personal ride"}
+          </span>
 
           <p className="mt-1.5 text-[15px] font-medium text-foreground truncate">
             {formatPlace(ride.origin)} → {formatPlace(ride.destination)}
@@ -69,25 +93,15 @@ export function RideRow({
             </p>
             <p className="flex items-center gap-1.5">
               <MapPin className="size-3.5 shrink-0" />
-              {pickupKm != null
-                ? `${pickupKm < 1 ? `${Math.round(pickupKm * 1000)} m` : `${pickupKm.toFixed(1)} km`} from you · ${pickupLabel(ride)}`
-                : pickupLabel(ride)}
+              {pickupKm != null ? `Pickup ${nearLabel(pickupKm)} from you` : pickupLabel(ride)}
             </p>
             {dropoffKm != null && (
               <p className="flex items-center gap-1.5">
                 <MapPin className="size-3.5 shrink-0" />
-                Drop-off {dropoffKm < 1 ? `${Math.round(dropoffKm * 1000)} m` : `${dropoffKm.toFixed(1)} km`} from your destination
+                Drop-off {nearLabel(dropoffKm)} from your destination
               </p>
             )}
-            <p className="text-xs">
-              {[
-                ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null,
-                ride.duration_min != null ? `${formatDuration(ride.duration_min)} drive` : null,
-                ride.stops.length > 0 ? `${ride.stops.length} stop${ride.stops.length === 1 ? "" : "s"}` : "Direct",
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
+            {pickupKm != null && <p className="text-xs">{pickupLabel(ride)}</p>}
           </div>
         </div>
 
@@ -97,7 +111,7 @@ export function RideRow({
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">per seat</p>
           <p className="text-xs text-primary-deep mt-2 font-medium">
-            {ride.seats_available} seat{ride.seats_available === 1 ? "" : "s"} left
+            {ride.seats_available} seat{ride.seats_available === 1 ? "" : "s"}
           </p>
         </div>
       </div>
