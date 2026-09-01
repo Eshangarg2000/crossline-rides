@@ -65,6 +65,7 @@ function MyTrips() {
   const runCancelBooking = useServerFn(cancelMyBooking);
   const runCancelRide = useServerFn(cancelMyRide);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"upcoming" | "past" | "cancelled">("upcoming");
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
