@@ -203,6 +203,16 @@ function RideDetail() {
             {ride.seats_available} of {ride.seats_total} seats still open.
           </p>
 
+          {isOwnRide && isBookable && (
+            <Link
+              to="/rides/$rideId/edit"
+              params={{ rideId: ride.id }}
+              className="mt-3 inline-block rounded-[12px] bg-background ring-1 ring-line px-4 py-2 text-sm font-semibold text-foreground"
+            >
+              Edit ride
+            </Link>
+          )}
+
           {hasMap && (
             <button
               type="button"
