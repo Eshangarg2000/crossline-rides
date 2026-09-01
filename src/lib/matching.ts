@@ -125,15 +125,18 @@ export type FlexibilityRule = {
  * the algorithm below.
  */
 export const FLEXIBILITY_RULES: Record<string, FlexibilityRule> = {
-  on_route: { pickupKm: 3, dropoffKm: 3, useDriverDetourAllowance: false },
-  meeting_point: { pickupKm: 10, dropoffKm: 8, useDriverDetourAllowance: false },
-  flexible: { pickupKm: 12, dropoffKm: 10, useDriverDetourAllowance: true },
+  // Driver won't deviate: the rider must already be on the path.
+  on_route: { pickupKm: 6, dropoffKm: 6, useDriverDetourAllowance: false },
+  // Rider travels to an agreed point on the corridor, so a wider radius is fine.
+  meeting_point: { pickupKm: 25, dropoffKm: 20, useDriverDetourAllowance: false },
+  // Driver will leave the route; their stated detour widens the radius further.
+  flexible: { pickupKm: 20, dropoffKm: 18, useDriverDetourAllowance: true },
 };
 
 export const DEFAULT_RULE: FlexibilityRule = FLEXIBILITY_RULES['on_route']!;
 
 /** Hard ceiling so a generous driver preference can never match a different corridor. */
-export const MAX_PICKUP_KM = 30;
+export const MAX_PICKUP_KM = 35;
 
 /**
  * Rough off-route allowance implied by a driver's stated detour minutes.
@@ -150,7 +153,7 @@ export function detourAllowanceKm(maxDetourMin: number | null | undefined) {
 export function ruleFor(ride: Ride): FlexibilityRule {
   const base = FLEXIBILITY_RULES[ride.pickup_flexibility ?? "on_route"] ?? DEFAULT_RULE;
   if (!base.useDriverDetourAllowance) return base;
-  const widened = Math.max(base.pickupKm, detourAllowanceKm(ride.max_detour_min));
+  const widened = base.pickupKm + detourAllowanceKm(ride.max_detour_min);
   return { ...base, pickupKm: Math.min(MAX_PICKUP_KM, widened) };
 }
 
