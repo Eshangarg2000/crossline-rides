@@ -19,6 +19,7 @@ import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as RidesIndexRouteImport } from './routes/rides.index'
 import { Route as RidesRideIdRouteImport } from './routes/rides.$rideId'
+import { Route as RidesRideIdEditRouteImport } from './routes/rides.$rideId.edit'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const RidesRideIdRoute = RidesRideIdRouteImport.update({
   path: '/rides/$rideId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RidesRideIdEditRoute = RidesRideIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => RidesRideIdRoute,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -87,8 +93,9 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/checkout/return': typeof CheckoutReturnRoute
-  '/rides/$rideId': typeof RidesRideIdRoute
+  '/rides/$rideId': typeof RidesRideIdRouteWithChildren
   '/rides/': typeof RidesIndexRoute
+  '/rides/$rideId/edit': typeof RidesRideIdEditRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -100,8 +107,9 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/checkout/return': typeof CheckoutReturnRoute
-  '/rides/$rideId': typeof RidesRideIdRoute
+  '/rides/$rideId': typeof RidesRideIdRouteWithChildren
   '/rides': typeof RidesIndexRoute
+  '/rides/$rideId/edit': typeof RidesRideIdEditRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -114,8 +122,9 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/checkout/return': typeof CheckoutReturnRoute
-  '/rides/$rideId': typeof RidesRideIdRoute
+  '/rides/$rideId': typeof RidesRideIdRouteWithChildren
   '/rides/': typeof RidesIndexRoute
+  '/rides/$rideId/edit': typeof RidesRideIdEditRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/rides/$rideId'
     | '/rides/'
+    | '/rides/$rideId/edit'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/rides/$rideId'
     | '/rides'
+    | '/rides/$rideId/edit'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/rides/$rideId'
     | '/rides/'
+    | '/rides/$rideId/edit'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -169,7 +181,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AdminDriversRoute: typeof AdminDriversRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
-  RidesRideIdRoute: typeof RidesRideIdRoute
+  RidesRideIdRoute: typeof RidesRideIdRouteWithChildren
   RidesIndexRoute: typeof RidesIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -246,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RidesRideIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rides/$rideId/edit': {
+      id: '/rides/$rideId/edit'
+      path: '/edit'
+      fullPath: '/rides/$rideId/edit'
+      preLoaderRoute: typeof RidesRideIdEditRouteImport
+      parentRoute: typeof RidesRideIdRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -256,6 +275,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface RidesRideIdRouteChildren {
+  RidesRideIdEditRoute: typeof RidesRideIdEditRoute
+}
+
+const RidesRideIdRouteChildren: RidesRideIdRouteChildren = {
+  RidesRideIdEditRoute: RidesRideIdEditRoute,
+}
+
+const RidesRideIdRouteWithChildren = RidesRideIdRoute._addFileChildren(
+  RidesRideIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -265,7 +296,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AdminDriversRoute: AdminDriversRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
-  RidesRideIdRoute: RidesRideIdRoute,
+  RidesRideIdRoute: RidesRideIdRouteWithChildren,
   RidesIndexRoute: RidesIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
