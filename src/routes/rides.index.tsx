@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { RideRow } from "@/components/RideRow";
 import { RideSearchPanel } from "@/components/RideSearchPanel";
-import { searchRides } from "@/lib/rides";
+import { boundsAround, searchRides } from "@/lib/rides";
 import { matchRides } from "@/lib/matching";
 
 
@@ -60,21 +60,26 @@ function RidesPage() {
     search.toLat != null && search.toLng != null
       ? { lat: search.toLat, lng: search.toLng }
       : null;
-  const proximity = Boolean(riderOrigin || riderDestination);
+  // Route-intelligent matching needs both ends picked from the map suggestions.
+  const proximity = Boolean(riderOrigin && riderDestination);
 
   const { data: rides, isLoading } = useQuery({
     queryKey: ["rides", search],
     queryFn: () =>
-      // With map coordinates we match against the driver's whole route instead of
-      // requiring the typed origin/destination text to line up.
-      searchRides(
-        proximity
-          ? { date: search.date, seats: search.seats }
-          : { from: search.from, to: search.to, date: search.date, seats: search.seats },
-      ),
+      proximity
+        ? searchRides({
+            date: search.date,
+            seats: search.seats,
+            requireGeometry: true,
+            near: boundsAround([riderOrigin!, riderDestination!]),
+          })
+        : searchRides({ from: search.from, to: search.to, date: search.date, seats: search.seats }),
   });
 
-  const matches = matchRides(rides ?? [], riderOrigin, riderDestination);
+  // Text search keeps the old behaviour; proximity search runs the matcher.
+  const matches = proximity
+    ? matchRides(rides ?? [], riderOrigin, riderDestination)
+    : (rides ?? []).map((ride) => ({ ride, pickupKm: null, dropoffKm: null }));
 
   return (
     <div className="mx-auto max-w-2xl px-5 sm:px-8 pt-8 pb-16">
