@@ -155,7 +155,11 @@ export function RideSearchPanel({
         </div>
       </div>
 
-      {locationNote && <p className="mt-2 px-1 text-xs text-muted-foreground">{locationNote}</p>}
+      {locationNote && (
+        <p data-testid="location-note" className="mt-2 px-1 text-xs text-muted-foreground">
+          {locationNote}
+        </p>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="rounded-[14px] bg-background ring-1 ring-black/5 px-4 py-2.5">
