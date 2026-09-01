@@ -17,7 +17,15 @@ function pickupLabel(ride: RideWithDriver) {
 }
 
 /** Search result: driver, trust, timing, pickup convenience, price. */
-export function RideRow({ ride }: { ride: RideWithDriver }) {
+export function RideRow({
+  ride,
+  pickupKm,
+  dropoffKm,
+}: {
+  ride: RideWithDriver;
+  pickupKm?: number | null;
+  dropoffKm?: number | null;
+}) {
   const name = ride.driver?.full_name || "Driver";
   const isProvider = ride.ride_kind === "commercial";
 
@@ -60,8 +68,16 @@ export function RideRow({ ride }: { ride: RideWithDriver }) {
             </p>
             <p className="flex items-center gap-1.5">
               <MapPin className="size-3.5 shrink-0" />
-              {pickupLabel(ride)}
+              {pickupKm != null
+                ? `${pickupKm < 1 ? `${Math.round(pickupKm * 1000)} m` : `${pickupKm.toFixed(1)} km`} from you · ${pickupLabel(ride)}`
+                : pickupLabel(ride)}
             </p>
+            {dropoffKm != null && (
+              <p className="flex items-center gap-1.5">
+                <MapPin className="size-3.5 shrink-0" />
+                Drop-off {dropoffKm < 1 ? `${Math.round(dropoffKm * 1000)} m` : `${dropoffKm.toFixed(1)} km`} from your destination
+              </p>
+            )}
             <p className="text-xs">
               {[
                 ride.distance_km != null ? formatDistance(Number(ride.distance_km)) : null,
