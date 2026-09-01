@@ -7,6 +7,10 @@ export type RideSearchValues = {
   to?: string | undefined;
   date?: string | undefined;
   seats?: number | undefined;
+  fromLat?: number | undefined;
+  fromLng?: number | undefined;
+  toLat?: number | undefined;
+  toLng?: number | undefined;
 };
 
 /**
@@ -26,6 +30,16 @@ export function RideSearchPanel({
   const [to, setTo] = useState(initial?.to ?? "");
   const [date, setDate] = useState(initial?.date ?? "");
   const [seats, setSeats] = useState(String(initial?.seats ?? 1));
+  const [fromPoint, setFromPoint] = useState<{ lat: number; lng: number } | null>(
+    initial?.fromLat != null && initial?.fromLng != null
+      ? { lat: initial.fromLat, lng: initial.fromLng }
+      : null,
+  );
+  const [toPoint, setToPoint] = useState<{ lat: number; lng: number } | null>(
+    initial?.toLat != null && initial?.toLng != null
+      ? { lat: initial.toLat, lng: initial.toLng }
+      : null,
+  );
 
   const input =
     "w-full bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground outline-none";
@@ -40,6 +54,10 @@ export function RideSearchPanel({
           to: to || undefined,
           date: date || undefined,
           seats: Number(seats) || 1,
+          fromLat: fromPoint?.lat,
+          fromLng: fromPoint?.lng,
+          toLat: toPoint?.lat,
+          toLng: toPoint?.lng,
         });
       }}
     >
@@ -51,8 +69,14 @@ export function RideSearchPanel({
             aria-label="Pickup location"
             className={input}
             value={from}
-            onChange={setFrom}
-            onPick={(p) => setFrom(p.address)}
+            onChange={(v) => {
+              setFrom(v);
+              setFromPoint(null);
+            }}
+            onPick={(p) => {
+              setFrom(p.address);
+              setFromPoint({ lat: p.lat, lng: p.lng });
+            }}
             placeholder="Pickup location"
           />
         </div>
@@ -63,8 +87,14 @@ export function RideSearchPanel({
             aria-label="Where are you going?"
             className={input}
             value={to}
-            onChange={setTo}
-            onPick={(p) => setTo(p.address)}
+            onChange={(v) => {
+              setTo(v);
+              setToPoint(null);
+            }}
+            onPick={(p) => {
+              setTo(p.address);
+              setToPoint({ lat: p.lat, lng: p.lng });
+            }}
             placeholder="Where are you going?"
           />
         </div>

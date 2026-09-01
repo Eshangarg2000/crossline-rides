@@ -51,6 +51,9 @@ function PostRide() {
   const [price, setPrice] = useState("35");
   const [car, setCar] = useState("");
   const [notes, setNotes] = useState("");
+  const [rideKind, setRideKind] = useState("cost_share");
+  const [pickupFlexibility, setPickupFlexibility] = useState("on_route");
+  const [maxDetour, setMaxDetour] = useState("10");
   const [busy, setBusy] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [routing, setRouting] = useState(false);
@@ -128,6 +131,9 @@ function PostRide() {
           distance_km: routeInfo?.distanceKm ?? null,
           duration_min: routeInfo?.durationMin ?? null,
           route_polyline: routeInfo?.polyline ?? null,
+          ride_kind: rideKind,
+          pickup_flexibility: pickupFlexibility,
+          max_detour_min: pickupFlexibility === "on_route" ? 0 : Number(maxDetour) || 0,
         })
         .select("id")
         .single();
@@ -312,6 +318,48 @@ function PostRide() {
             <label className={label} htmlFor="pr-car">Car</label>
             <input id="pr-car" className={field} value={car} onChange={(e) => setCar(e.target.value)} placeholder="Toyota RAV4" />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={label} htmlFor="pr-kind">Trip type</label>
+            <select
+              id="pr-kind"
+              className={field}
+              value={rideKind}
+              onChange={(e) => setRideKind(e.target.value)}
+            >
+              <option value="cost_share">I'm already travelling (cost sharing)</option>
+              <option value="commercial">I provide transportation on this route</option>
+            </select>
+          </div>
+          <div>
+            <label className={label} htmlFor="pr-flex">Pickup flexibility</label>
+            <select
+              id="pr-flex"
+              className={field}
+              value={pickupFlexibility}
+              onChange={(e) => setPickupFlexibility(e.target.value)}
+            >
+              <option value="on_route">Only along my route</option>
+              <option value="meeting_point">At a meeting point</option>
+              <option value="flexible">I can detour to pick riders up</option>
+            </select>
+          </div>
+          {pickupFlexibility !== "on_route" && (
+            <div>
+              <label className={label} htmlFor="pr-detour">Maximum detour (minutes)</label>
+              <input
+                id="pr-detour"
+                type="number"
+                min={0}
+                max={45}
+                className={field}
+                value={maxDetour}
+                onChange={(e) => setMaxDetour(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         <div>
