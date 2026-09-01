@@ -81,3 +81,33 @@ export async function computeDrivingRoute(input: RouteInput): Promise<RouteResul
     polyline: route.polyline?.encodedPolyline ?? null,
   };
 }
+
+export type ReverseGeocodeResult = { address: string | null };
+
+/**
+ * Turns coordinates into a human address using the same Google Maps gateway
+ * connection as routing. Returns { address: null } instead of throwing when
+ * Google has nothing useful, so the rider flow can fall back gracefully.
+ */
+export async function reverseGeocodePoint(lat: number, lng: number): Promise<ReverseGeocodeResult> {
+  const { lovableKey, mapsKey } = credentials();
+
+  const response = await fetch(
+    `${GATEWAY_URL}/maps/api/geocode/json?latlng=${lat},${lng}&region=ca&language=en`,
+    {
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": mapsKey,
+      },
+    },
+  );
+
+  if (!response.ok) await denied(response);
+
+  const payload = (await response.json()) as {
+    status?: string;
+    results?: Array<{ formatted_address?: string }>;
+  };
+
+  return { address: payload.results?.[0]?.formatted_address ?? null };
+}
