@@ -102,11 +102,17 @@ function PostRide() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
+    // Complete route data is required so riders can be matched against the real path.
+    if (!originPick || !destinationPick || !routeInfo?.polyline || !routeInfo.distanceKm || !routeInfo.durationMin) {
+      toast.error("Pick both addresses from the suggestions so we can measure the route.");
+      return;
+    }
     setBusy(true);
     try {
       const departAt = new Date(`${date}T${time}`);
       const arriveAt = arriveTime ? new Date(`${date}T${arriveTime}`) : null;
       const seats = Number(seatsTotal) || 1;
+
 
       const { data, error } = await supabase
         .from("rides")
@@ -375,11 +381,17 @@ function PostRide() {
 
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || routing || !routeInfo?.polyline}
           className="w-full rounded-[12px] bg-primary hover:bg-primary-deep text-primary-foreground text-sm font-semibold py-3 disabled:opacity-60"
         >
           {busy ? "Publishing…" : "Publish ride"}
         </button>
+        {!routeInfo?.polyline && (
+          <p className="text-xs text-muted-foreground">
+            Choose your pick up and drop off from the address suggestions — Crossline needs the
+            measured route to show your ride to riders along the way.
+          </p>
+        )}
       </form>
     </div>
   );
