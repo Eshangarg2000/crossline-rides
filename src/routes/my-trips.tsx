@@ -160,22 +160,51 @@ function MyTrips() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-4xl px-5 sm:px-8 pt-10 pb-16">
-      <h1 className="font-display font-semibold text-foreground text-3xl">My trips</h1>
+  const now = Date.now();
+  const bucketed = {
+    upcoming: [] as BookingRow[],
+    past: [] as BookingRow[],
+    cancelled: [] as BookingRow[],
+  };
+  for (const b of bookings ?? []) {
+    if (b.status === "cancelled" || b.status === "expired") bucketed.cancelled.push(b);
+    else if (b.status === "completed" || (b.rides && new Date(b.rides.depart_at).getTime() < now))
+      bucketed.past.push(b);
+    else bucketed.upcoming.push(b);
+  }
+  const shown = bucketed[tab];
 
-      <h2 className="font-display font-semibold text-foreground text-xl mt-8 mb-4">
-        Seats you booked
-      </h2>
-      <div className="space-y-3">
+  return (
+    <div className="mx-auto max-w-2xl px-5 sm:px-8 pt-8 pb-16">
+      <h1 className="font-display font-semibold text-foreground text-2xl">My trips</h1>
+
+      <div className="mt-5 flex gap-2">
+        {(["upcoming", "past", "cancelled"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            aria-pressed={tab === t}
+            className={`rounded-full px-4 py-2 text-xs font-medium ring-1 capitalize transition ${
+              tab === t
+                ? "bg-foreground text-background ring-transparent"
+                : "bg-background text-muted-foreground ring-line"
+            }`}
+          >
+            {t} ({bucketed[t].length})
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 space-y-3">
         {bookingsLoading && (
           <div className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 text-sm text-muted-foreground">
-            Loading your bookings…
+            Loading your trips…
           </div>
         )}
         {bookingsError && (
           <div className="rounded-[18px] ring-1 ring-black/5 bg-card p-5 text-sm">
-            <p className="text-foreground">We couldn't load your bookings.</p>
+            <p className="text-foreground">We couldn&apos;t load your trips.</p>
             <button
               type="button"
               onClick={() => refetchBookings()}
@@ -185,34 +214,47 @@ function MyTrips() {
             </button>
           </div>
         )}
-        {bookings?.map((b) => {
-          const cancellable = b.status === "pending_payment" || b.status === "confirmed";
+        {shown.map((b) => {
+          const cancellable =
+            tab === "upcoming" && (b.status === "pending_payment" || b.status === "confirmed");
           return (
             <div key={b.id} className="rounded-[18px] ring-1 ring-black/5 bg-card p-5">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <div className="flex-1 min-w-[200px]">
-                  <p className="font-medium text-foreground">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-medium text-foreground">
                     {formatPlace(b.rides?.origin)} → {formatPlace(b.rides?.destination)}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {b.rides ? `${dayOf(b.rides.depart_at)} · ${timeOf(b.rides.depart_at)} · ` : ""}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {b.rides ? `${dayOf(b.rides.depart_at)} · ${timeOf(b.rides.depart_at)}` : "Trip removed"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Pickup {formatPlace(b.rides?.origin) || "—"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
                     {b.seats} seat{b.seats === 1 ? "" : "s"}
                     {Number(b.refund_amount) > 0
                       ? ` · ${money(Number(b.refund_amount))} refunded`
                       : ""}
                   </p>
                 </div>
-                <StatusPill status={b.status} />
-                <span className="font-display font-semibold text-foreground">
-                  {money(Number(b.total_amount))}
-                </span>
+                <div className="text-right shrink-0">
+                  <p className="font-display font-semibold text-foreground">
+                    {money(Number(b.total_amount))}
+                  </p>
+                  <div className="mt-2">
+                    <StatusPill status={b.status} />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-4">
                 {b.rides && (
                   <Link
                     to="/rides/$rideId"
                     params={{ rideId: b.rides.id }}
+                    search={{}}
                     className="text-sm text-primary-deep font-medium"
                   >
-                    View
+                    View ride
                   </Link>
                 )}
                 {cancellable && (
@@ -229,10 +271,10 @@ function MyTrips() {
             </div>
           );
         })}
-        {bookings?.length === 0 && (
+        {!bookingsLoading && shown.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            No bookings yet.{" "}
-            <Link to="/rides" className="text-primary-deep font-medium">
+            Nothing here yet.{" "}
+            <Link to="/rides" search={{}} className="text-primary-deep font-medium">
               Find a ride
             </Link>
           </p>
