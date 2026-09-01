@@ -211,7 +211,7 @@ function EditRide() {
 
     setBusy(true);
     try {
-      const update: Record<string, unknown> = {
+      const update: Partial<Database["public"]["Tables"]["rides"]["Update"]> = {
         seats_total: seats,
         // Keep booked seats reserved; only the free pool changes.
         seats_available: Math.max(0, seats - seatsTaken),

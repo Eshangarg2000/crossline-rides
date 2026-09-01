@@ -115,6 +115,7 @@ export function PlaceInput({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
+        autoComplete="off"
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
